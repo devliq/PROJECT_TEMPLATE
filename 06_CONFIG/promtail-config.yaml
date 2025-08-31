@@ -1,0 +1,109 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  # Application logs
+  - job_name: 'app'
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: app
+          __path__: /var/log/app/*.log
+    pipeline_stages:
+      - match:
+          selector: '{job="app"}'
+          stages:
+            - json:
+                expressions:
+                  level: level
+                  message: message
+                  timestamp: timestamp
+            - labels:
+                level:
+                job:
+            - timestamp:
+                source: timestamp
+                format: RFC3339Nano
+            - output:
+                source: message
+
+  # System logs
+  - job_name: 'system'
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: system
+          __path__: /var/log/host/syslog
+    pipeline_stages:
+      - match:
+          selector: '{job="system"}'
+          stages:
+            - regex:
+                expression: '^(?P<timestamp>\w+\s+\d+\s+\d+:\d+:\d+)\s+(?P<hostname>\w+)\s+(?P<program>\w+)\s+(?P<message>.+)$'
+            - timestamp:
+                source: timestamp
+                format: 'Jan _2 15:04:05'
+            - labels:
+                hostname:
+                program:
+            - output:
+                source: message
+
+  # Docker container logs
+  - job_name: 'docker'
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: docker
+          __path__: /var/log/host/docker/containers/*/*.log
+    pipeline_stages:
+      - match:
+          selector: '{job="docker"}'
+          stages:
+            - json:
+                expressions:
+                  log: log
+                  stream: stream
+                  time: time
+            - labels:
+                stream:
+            - timestamp:
+                source: time
+                format: RFC3339Nano
+            - output:
+                source: log
+
+  # Nginx access logs
+  - job_name: 'nginx'
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: nginx
+          __path__: /var/log/nginx/access.log
+    pipeline_stages:
+      - match:
+          selector: '{job="nginx"}'
+          stages:
+            - regex:
+                expression: '^(?P<remote_addr>\S+)\s+-\s+(?P<remote_user>\S+)\s+\[(?P<time_local>[^\]]+)\]\s+"(?P<request>[^"]+)"\s+(?P<status>\d+)\s+(?P<body_bytes_sent>\d+)\s+"(?P<http_referer>[^"]*)"\s+"(?P<http_user_agent>[^"]*)"'
+            - labels:
+                remote_addr:
+                status:
+                method:
+                path:
+            - timestamp:
+                source: time_local
+                format: '02/Jan/2006:15:04:05 -0700'
+            - output:
+                source: request

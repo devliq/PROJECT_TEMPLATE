@@ -1,38 +1,76 @@
 global:
   scrape_interval: 15s
   evaluation_interval: 15s
+  scrape_timeout: 10s
 
 rule_files:
-  # - "first_rules.yml"
-  # - "second_rules.yml"
+  # - "alert_rules.yml"
+  # - "recording_rules.yml"
 
 scrape_configs:
-  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
-  - job_name: "prometheus"
+  # Prometheus itself
+  - job_name: 'prometheus'
     static_configs:
-      - targets: ["localhost:9090"]
+      - targets: ['localhost:9090']
 
-  - job_name: "node"
+  # Application metrics
+  - job_name: 'app'
     static_configs:
-      - targets: ["localhost:9100"]
-
-  - job_name: "app"
-    static_configs:
-      - targets: ["app:3000"]
+      - targets: ['app:3000']
     scrape_interval: 5s
-    metrics_path: "/metrics"
+    metrics_path: '/metrics'
+    params:
+      format: ['prometheus']
 
-  - job_name: "postgres"
+  # Node.js application health
+  - job_name: 'nodejs'
     static_configs:
-      - targets: ["db:5432"]
+      - targets: ['app:3000']
     scrape_interval: 10s
+    metrics_path: '/health/metrics'
 
-  - job_name: "redis"
+  # Database metrics
+  - job_name: 'postgres'
     static_configs:
-      - targets: ["redis:6379"]
-    scrape_interval: 10s
+      - targets: ['postgres-exporter:9187']
+    scrape_interval: 30s
 
-  - job_name: "nginx"
+  # Redis metrics
+  - job_name: 'redis'
     static_configs:
-      - targets: ["nginx:80"]
-    scrape_interval: 10s
+      - targets: ['redis-exporter:9121']
+    scrape_interval: 30s
+
+  # System metrics
+  - job_name: 'node'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 15s
+
+  # Nginx metrics (if enabled)
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx:80']
+    scrape_interval: 30s
+    metrics_path: '/status'
+    params:
+      format: ['prometheus']
+
+  # Docker metrics
+  - job_name: 'docker'
+    static_configs:
+      - targets: ['host.docker.internal:9323']
+    scrape_interval: 30s
+
+  # Custom business metrics
+  - job_name: 'business-metrics'
+    static_configs:
+      - targets: ['app:3000']
+    scrape_interval: 60s
+    metrics_path: '/metrics/business'
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          # - alertmanager:9093
