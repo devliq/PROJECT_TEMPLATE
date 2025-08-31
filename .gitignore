@@ -1,0 +1,628 @@
+# =============================================================================
+# PROJECT TEMPLATE .GITIGNORE
+# =============================================================================
+# Comprehensive but streamlined .gitignore for project templates
+# Covers Node.js, Python, Docker, cloud platforms, and development tools
+
+# =============================================================================
+# DEPENDENCIES & PACKAGES
+# =============================================================================
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+vendor/
+.bundle/
+*.egg-info/
+dist/
+build/
+target/
+
+# =============================================================================
+# BUILD OUTPUTS & ARTIFACTS
+# =============================================================================
+build/
+dist/
+out/
+*.exe
+*.dll
+*.jar
+*.war
+*.ear
+*.bin
+*.hex
+*.o
+*.obj
+*.lib
+*.a
+*.so
+*.dylib
+
+# =============================================================================
+# ENVIRONMENT & CONFIGURATION
+# =============================================================================
+.env
+.env.local
+.env.*.local
+.env.production
+.env.staging
+.env.development
+.envrc.local
+
+# =============================================================================
+# IDE & EDITOR FILES
+# =============================================================================
+.vscode/
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+.idea/
+*.swp
+*.swo
+*~
+
+# =============================================================================
+# OS GENERATED FILES
+# =============================================================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.stackdump
+*.lnk
+
+# =============================================================================
+# LOGS & TEMPORARY FILES
+# =============================================================================
+logs/
+*.log
+*.tmp
+*.temp
+*.cache
+temp/
+tmp/
+.cache/
+
+# =============================================================================
+# TEST COVERAGE & RESULTS
+# =============================================================================
+coverage/
+.coverage
+.nyc_output/
+htmlcov/
+.tox/
+.nox/
+test-results/
+junit.xml
+test-output/
+
+# =============================================================================
+# DATABASE FILES
+# =============================================================================
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.db-shm
+*.db-wal
+
+# =============================================================================
+# CONTAINER & DEPLOYMENT
+# =============================================================================
+.dockerignore
+Dockerfile.*
+docker-compose.*.yml
+docker-compose.*.yaml
+.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.tfstate.lock.info
+
+# =============================================================================
+# CLOUD & INFRASTRUCTURE
+# =============================================================================
+.aws/
+.azure/
+.gcloud/
+.do/
+.linode/
+.heroku/
+.netlify/
+.vercel/
+.surge/
+.firebase/
+
+# =============================================================================
+# DEVELOPMENT TOOLS
+# =============================================================================
+.eslintcache
+.parcel-cache
+.next
+.nuxt
+.vuepress/dist
+.serverless/
+.fusebox/
+.dynamodb/
+
+# =============================================================================
+# BACKUP & ARCHIVE FILES
+# =============================================================================
+*.bak
+*.backup
+*.old
+*.orig
+*.swp
+*.swo
+*~
+*.zip
+*.rar
+*.7z
+*.tar
+*.gz
+*.bz2
+*.xz
+*.tgz
+*.tbz2
+*.txz
+
+# =============================================================================
+# MEDIA & BINARY FILES
+# =============================================================================
+*.mp4
+*.avi
+*.mkv
+*.mov
+*.wmv
+*.flv
+*.webm
+*.mp3
+*.wav
+*.flac
+*.aac
+*.ogg
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.tiff
+*.tif
+*.svg
+*.ico
+*.webp
+*.pdf
+*.doc
+*.docx
+*.xls
+*.xlsx
+*.ppt
+*.pptx
+
+# =============================================================================
+# LANGUAGE SPECIFIC
+# =============================================================================
+
+# Python
+*.py[cod]
+*$py.class
+build/
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+.ipynb_checkpoints
+.python-version
+pipenv.lock
+__pypackages__/
+celerybeat-schedule
+celerybeat.pid
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.spyderproject
+.spyproject
+.ropeproject
+/site
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+
+# JavaScript/Node.js
+.npm
+.node_repl_history
+*.tgz
+.yarn-integrity
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+.grunt
+.lock-wscript
+build/Release
+jspm_packages/
+bower_components
+
+# Java
+*.class
+*.ctxt
+.mtj.tmp/
+hs_err_pid*
+.gradle
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# C/C++
+*.o
+*.obj
+*.lib
+*.a
+*.la
+*.lo
+*.dylib
+*.i*86
+*.x86_64
+*.d
+*.lst
+*.map
+*.elf
+*.srec
+*.s19
+*.a90
+*.sym
+*.lss
+*.lbd
+*.cdb
+*.cdb.*
+*.dep
+
+# Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Rust
+target/
+Cargo.lock
+**/*.rs.bk
+
+# PHP
+/vendor/
+composer.lock
+*.phar
+
+# Ruby
+.bundle/
+.byebug_history
+.gem
+*.gem
+*.rbc
+/.config
+/coverage/
+/InstalledFiles
+/pkg/
+/spec/reports/
+/spec/examples.txt
+/test/tmp/
+/test/version_tmp/
+/tmp/
+
+# Game Development
+Library/
+Temp/
+Obj/
+Build/
+Builds/
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+Binaries/
+Intermediate/
+Saved/
+DerivedDataCache/
+*.uasset
+*.umap
+*.uplugin
+*.uproject
+.import/
+*.import
+*.remap
+*.translation
+*.tres
+*.tscn
+*.godot
+*.mono/
+
+# Mobile Development
+platforms/
+plugins/
+www/
+.ionide/
+.expo/
+.expo-shared/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+android/app/build/
+ios/Flutter/App.framework
+ios/Flutter/Flutter.framework
+
+# Desktop Applications
+app/dist/
+release/
+nwjs/
+*.AppImage
+snapcraft.yaml
+.flatpak/
+.arch/
+.pacman/
+.snap/
+
+# =============================================================================
+# VERSION CONTROL
+# =============================================================================
+.git/
+.svn/
+.hg/
+.bzr/
+.cvs/
+_darcs/
+.fossil/
+.pijul/
+_mtn/
+
+# =============================================================================
+# SECURITY & CERTIFICATES
+# =============================================================================
+*.key
+*.pem
+*.crt
+*.cer
+*.p12
+*.pfx
+secrets/
+keys/
+
+# =============================================================================
+# LOCK FILES
+# =============================================================================
+*.lock
+*.lck
+yarn.lock
+package-lock.json
+
+# =============================================================================
+# CONFIGURATION FILES
+# =============================================================================
+*.config
+*.conf
+*.ini
+*.cfg
+*.properties
+
+# =============================================================================
+# DOCUMENTATION BUILD
+# =============================================================================
+docs/_build/
+
+# =============================================================================
+# NIX & DIRENV
+# =============================================================================
+result
+result-*
+.direnv/
+.envrc
+.flake/
+
+# =============================================================================
+# KUBERNETES & CONTAINER ORCHESTRATION
+# =============================================================================
+*.yaml.bak
+*.yml.bak
+*.tgz
+*.template
+*.retry
+.vagrant/
+*.pkrvars.hcl
+
+# =============================================================================
+# WEB ASSETS
+# =============================================================================
+*.ttf
+*.otf
+*.woff
+*.woff2
+*.eot
+
+# =============================================================================
+# 3D MODELS & ASSETS
+# =============================================================================
+*.obj
+*.fbx
+*.dae
+*.3ds
+*.blend
+*.max
+*.mb
+*.ma
+
+# =============================================================================
+# SUBTITLES & MEDIA METADATA
+# =============================================================================
+*.srt
+*.sub
+*.ssa
+*.ass
+*.vtt
+*.m3u
+*.m3u8
+*.pls
+*.xspf
+
+# =============================================================================
+# TORRENTS & E-BOOKS
+# =============================================================================
+*.torrent
+*.epub
+*.mobi
+*.azw
+*.azw3
+
+# =============================================================================
+# EXECUTABLES & SYSTEM FILES
+# =============================================================================
+*.exe
+*.msi
+*.dmg
+*.pkg
+*.deb
+*.rpm
+*.appimage
+*.snap
+*.sys
+*.dll
+*.drv
+*.ocx
+*.cpl
+*.scr
+
+# =============================================================================
+# DEVELOPMENT ARTIFACTS
+# =============================================================================
+*.pdb
+*.ilk
+*.exp
+*.lib
+*.framework
+*.vscode-test
+.tern-port
+
+# =============================================================================
+# GAME DEVELOPMENT SPECIFIC
+# =============================================================================
+*.yyz
+*.yymps
+*.yydebug
+*.yydebuglog
+*.c3p
+*.c3p.bak
+*.rpyc
+*.rpyb
+*.rpym
+*.rpymc
+*.tws
+*.twine
+*.bitsy
+*.p8
+*.p8.png
+*.tic
+*.love
+*.corona
+.build/
+.internal/
+*.collection
+*.collectionproxy
+*.collisionobject
+*.factory
+*.gameobject
+*.go
+*.gui
+*.guic
+*.input_binding
+*.label
+*.material
+*.model
+*.particlefx
+*.render
+*.script
+*.sound
+*.sprite
+*.texture
+*.tilemap
+*.tilesource
+*.gdg
+*.gde
+*.stencyl
+*.swf
+*.rgss2a
+*.rgss3a
+*.vnm
+*.ags
+
+# =============================================================================
+# MULTIMEDIA FILES (EXTENDED)
+# =============================================================================
+*.m4v
+*.3gp
+*.mpg
+*.mpeg
+*.m2v
+*.m4v
+*.asf
+*.rm
+*.rmvb
+*.vob
+*.ogv
+*.drc
+*.gifv
+*.mng
+*.wma
+*.m4a
+*.aiff
+*.au
+*.ra
+*.heic
+*.raw
+*.odt
+*.ods
+*.odp
+*.rtf
+*.tex

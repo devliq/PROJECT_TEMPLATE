@@ -1,0 +1,30 @@
+{
+  "app": {
+    "name": "My Project",
+    "version": "1.0.0",
+    "environment": "development"
+  },
+  "database": {
+    "host": "localhost",
+    "port": 5432,
+    "name": "myproject_db",
+    "username": "user",
+    "password": "password"
+  },
+  "api": {
+    "baseUrl": "https://api.example.com",
+    "timeout": 5000,
+    "retries": 3
+  },
+  "logging": {
+    "level": "info",
+    "file": "logs/app.log",
+    "maxSize": "10m",
+    "maxFiles": 5
+  },
+  "features": {
+    "debug": true,
+    "cache": true,
+    "analytics": false
+  }
+}

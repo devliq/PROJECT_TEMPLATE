@@ -1,0 +1,106 @@
+{
+  "name": "Project Template Security Configuration",
+  "version": "1.0.0",
+  "description": "Security scanning and vulnerability assessment configuration",
+
+  "npm": {
+    "audit": {
+      "level": "moderate",
+      "production": true,
+      "json": false
+    }
+  },
+
+  "eslint": {
+    "security": {
+      "enabled": true,
+      "plugins": ["security"],
+      "rules": {
+        "security/detect-buffer-noassert": "error",
+        "security/detect-child-process": "warn",
+        "security/detect-disable-mustache-escape": "error",
+        "security/detect-eval-with-expression": "error",
+        "security/detect-new-buffer": "error",
+        "security/detect-no-csrf-before-method-override": "error",
+        "security/detect-non-literal-fs-filename": "warn",
+        "security/detect-non-literal-regexp": "warn",
+        "security/detect-non-literal-require": "error",
+        "security/detect-object-injection": "error",
+        "security/detect-possible-timing-attacks": "error",
+        "security/detect-pseudoRandomBytes": "error",
+        "security/detect-unsafe-regex": "error"
+      }
+    }
+  },
+
+  "scanning": {
+    "schedule": "weekly",
+    "automated": true,
+    "failOnHighSeverity": true,
+    "reportFormat": "json",
+    "outputDirectory": "reports/security"
+  },
+
+  "vulnerability": {
+    "severityThresholds": {
+      "critical": 0,
+      "high": 0,
+      "moderate": 5,
+      "low": 10,
+      "info": 20
+    },
+    "ignorePatterns": ["node_modules/**", "build/**", "dist/**", "coverage/**"]
+  },
+
+  "dependencies": {
+    "allowList": [],
+    "blockList": ["vulnerable-package-name"],
+    "trustedRegistries": ["https://registry.npmjs.org/"]
+  },
+
+  "secrets": {
+    "scanEnabled": true,
+    "patterns": ["password", "secret", "token", "key", "credential"],
+    "excludePaths": ["node_modules/**", ".git/**", "build/**", "dist/**"]
+  },
+
+  "codeAnalysis": {
+    "enabled": true,
+    "rules": {
+      "sqlInjection": "error",
+      "xss": "error",
+      "commandInjection": "error",
+      "pathTraversal": "error",
+      "insecureRandom": "warn",
+      "weakCrypto": "warn"
+    }
+  },
+
+  "monitoring": {
+    "enabled": true,
+    "alerts": {
+      "newVulnerabilities": true,
+      "severityChanges": true,
+      "dependencyUpdates": true
+    },
+    "notificationChannels": ["console", "email"]
+  },
+
+  "compliance": {
+    "standards": ["OWASP Top 10", "NIST Cybersecurity Framework"],
+    "requiredChecks": [
+      "dependency_scanning",
+      "secret_detection",
+      "code_analysis"
+    ]
+  },
+
+  "reports": {
+    "generate": true,
+    "format": ["json", "html", "pdf"],
+    "retention": {
+      "days": 90,
+      "maxReports": 50
+    }
+  }
+}

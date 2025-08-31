@@ -1,0 +1,826 @@
+# Project Template
+
+This is a comprehensive template for new projects following the Windows 8.3 compatible directory structure. It provides a standardized organization for various types of software projects, ensuring consistency and ease of navigation.
+
+## Table of Contents
+
+- [Quick Start](#quick-start)
+- [Available Scripts](#available-scripts)
+- [Directory Structure](#directory-structure)
+- [Prerequisites](#prerequisites)
+- [Environment Reproducibility](#environment-reproducibility)
+- [Getting Started](#getting-started)
+- [Usage](#usage)
+- [Development Workflow](#development-workflow)
+- [Best Practices](#best-practices)
+- [Examples](#examples)
+- [Troubleshooting](#troubleshooting)
+- [Security](#security)
+- [Performance](#performance)
+- [Contributing](#contributing)
+- [License](#license)
+
+## Directory Structure
+
+- `00_DOCS/` - Documentation, README files, API references, and project specifications
+- `01_SRC/` - Main source code files, organized by modules or components (includes example index.js and main.py)
+- `02_TEST/` - Unit tests, integration tests, test data, and testing utilities
+- `03_BUILD/` - Build outputs, compiled binaries, and generated artifacts
+- `04_DEPLOY/` - Deployment configurations, Docker files, and environment-specific settings
+- `05_ASSETS/` - Static assets like images, fonts, stylesheets, and media files
+- `06_CONFIG/` - Configuration files for databases, APIs, logging, and application settings (includes .env)
+- `07_SCRIPT/` - Build scripts, automation scripts, and utility scripts
+- `vendor/` - Third-party dependencies, libraries, and external tools
+- `temp/` - Temporary files, cache, and files that should not be version controlled
+- `package.json` - Node.js project configuration and dependencies
+
+## Prerequisites
+
+Before using this template, ensure you have:
+
+- Git installed for version control
+- Your preferred development environment (VS Code, IntelliJ, etc.)
+- Basic knowledge of your project's technology stack
+- Access to necessary development tools and dependencies
+
+## Environment Reproducibility
+
+This template supports reproducible development environments using **direnv** and **Nix**. These tools ensure consistent development environments across different machines and team members.
+
+### Direnv Setup
+
+Direnv automatically loads environment variables when you enter the project directory.
+
+1. **Install direnv**:
+
+   ```bash
+   # On macOS with Homebrew
+   brew install direnv
+
+   # On Ubuntu/Debian
+   sudo apt install direnv
+
+   # On NixOS or with Nix
+   nix-env -iA nixpkgs.direnv
+
+   # Manual installation
+   curl -sfL https://direnv.net/install.sh | bash
+   ```
+
+2. **Configure your shell**:
+
+   ```bash
+   # Add to ~/.bashrc or ~/.zshrc
+   eval "$(direnv hook bash)"
+
+   # Or for zsh
+   eval "$(direnv hook zsh)"
+
+   # Or for fish
+   direnv hook fish | source
+   ```
+
+3. **Allow the environment**:
+
+   ```bash
+   cd your-project-directory
+   direnv allow
+   ```
+
+### Nix Setup
+
+Nix provides reproducible development environments with exact package versions.
+
+1. **Install Nix**:
+
+   ```bash
+   # Multi-user installation (recommended)
+   curl -L https://nixos.org/nix/install | sh
+
+   # Or single-user
+   curl -L https://nixos.org/nix/install | sh -s -- --no-daemon
+   ```
+
+2. **Enable experimental features** (for flakes):
+
+   ```bash
+   mkdir -p ~/.config/nix
+   echo "experimental-features = nix-command flakes" >> ~/.config/nix/nix.conf
+   ```
+
+### Using Reproducible Environments
+
+#### Option 1: Traditional Nix Shell
+
+```bash
+# Enter the reproducible environment
+nix-shell
+
+# Or with specific shell
+nix-shell --command "zsh"
+```
+
+#### Option 2: Nix Flakes (Modern)
+
+```bash
+# Enter development environment
+nix develop
+
+# Update dependencies
+nix flake update
+
+# Build the project
+nix build
+
+# Run commands
+nix run
+```
+
+#### Option 3: Direnv + Nix Integration
+
+```bash
+# Install nix-direnv for better integration
+nix-env -iA nixpkgs.nix-direnv
+
+# The .envrc file will automatically use Nix when available
+cd your-project-directory
+direnv allow
+```
+
+### Environment Files
+
+- **`.envrc`** - Direnv configuration for automatic environment loading
+- **`shell.nix`** - Traditional Nix shell configuration
+- **`flake.nix`** - Modern Nix flakes configuration
+- **`.env`** - Environment variables (created from `.env.example`)
+
+### Benefits
+
+- **Consistency**: Same environment on all machines
+- **Isolation**: No conflicts with system packages
+- **Reproducibility**: Exact package versions and configurations
+- **Portability**: Works on Linux, macOS, and Windows (WSL)
+- **Caching**: Fast environment setup after initial download
+
+### Troubleshooting
+
+- **Direnv not loading**: Run `direnv allow` in the project directory
+- **Nix slow**: Enable binary caches and use `nix-shell --pure`
+- **Permission issues**: Ensure proper Nix installation and user permissions
+- **Flakes not working**: Check experimental features are enabled
+
+For detailed documentation, see the [Environment Setup Guide](00_DOCS/environment-setup.md).
+
+## Getting Started
+
+1. **Clone or Copy the Template**
+
+   ```bash
+   git clone https://github.com/your-repo/project-template.git
+   # or copy the template directory to your desired location
+   ```
+
+2. **Rename the Project**
+
+   ```bash
+   mv project-template your-project-name
+   cd your-project-name
+   ```
+
+3. **Initialize Git Repository**
+
+   ```bash
+   git init
+   git add .
+   git commit -m "Initial commit with project template"
+   ```
+
+4. **Set Up Your Source Code**
+   - Place your main source files in `01_SRC/`
+   - Organize code into subdirectories as needed (e.g., `01_SRC/main/`, `01_SRC/utils/`)
+
+5. **Configure Your Project**
+   - Add configuration files to `06_CONFIG/`
+   - Set up build scripts in `07_SCRIPT/`
+   - Add documentation to `00_DOCS/`
+
+6. **Install Dependencies**
+   - Place third-party libraries in `vendor/` or use package managers
+   - Update dependency management files as needed
+
+## Usage
+
+### Development Workflow
+
+1. **Daily Development**
+   - Work on source code in `01_SRC/`
+   - Write tests in `02_TEST/`
+   - Use `temp/` for temporary files during development
+
+2. **Building**
+   - Run build scripts from `07_SCRIPT/`
+   - Output builds to `03_BUILD/`
+
+3. **Deployment**
+   - Use configurations from `04_DEPLOY/`
+   - Reference assets from `05_ASSETS/`
+
+### File Naming Conventions
+
+- Keep filenames concise, ideally under 8 characters with 3-character extensions
+- Use descriptive names that clearly indicate file purpose
+- Follow language-specific naming conventions
+
+## Best Practices
+
+### Organization
+
+- Maintain the numbered directory structure for consistency
+- Group related files together logically
+- Use clear, descriptive names for files and directories
+
+### Version Control & GitOps
+
+- Commit regularly with meaningful commit messages
+- Use `.gitignore` to exclude unnecessary files
+- Store temporary and generated files in `temp/`
+- Implement GitOps workflows for infrastructure and deployments
+- Use GitHub Actions for CI/CD automation
+
+### Configuration Management
+
+- Keep environment-specific settings in `06_CONFIG/`
+- Use environment variables for sensitive information
+- Document configuration options in `00_DOCS/`
+- Implement Infrastructure as Code with Terraform
+
+### Documentation
+
+- Maintain up-to-date README files
+- Document APIs and interfaces
+- Include setup and usage instructions
+- Document deployment and operational procedures
+
+### Testing & Quality Assurance
+
+- Write comprehensive tests in `02_TEST/`
+- Include test data and fixtures
+- Run tests regularly during development
+- Implement automated testing in CI/CD pipeline
+- Use ESLint and Prettier for code quality
+- Perform security scanning and vulnerability checks
+
+### Security
+
+- Never commit sensitive information (passwords, API keys)
+- Use environment variables for secrets
+- Regularly audit dependencies in `vendor/`
+- Implement security headers and CORS policies
+- Use container security best practices
+- Perform regular security scans and audits
+
+### DevOps & Automation
+
+- Use Docker for containerization
+- Implement monitoring with Prometheus and Grafana
+- Set up logging aggregation with Loki
+- Use Infrastructure as Code for cloud resources
+- Automate deployments with GitOps principles
+- Implement health checks and auto-scaling
+
+### Containerization & Deployment
+
+- Use multi-stage Docker builds for optimization
+- Implement proper health checks and graceful shutdown
+- Use docker-compose for local development
+- Implement blue-green or canary deployments
+- Set up proper resource limits and requests
+
+## Examples
+
+### Python Project Setup
+
+```
+01_SRC/
+├── main.py
+├── utils.py
+└── models/
+    └── user.py
+
+02_TEST/
+├── test_main.py
+└── test_utils.py
+
+06_CONFIG/
+├── config.py
+└── requirements.txt
+
+07_SCRIPT/
+├── setup.py
+└── build.sh
+```
+
+### Web Application Setup
+
+```
+01_SRC/
+├── index.html
+├── styles.css
+└── script.js
+
+05_ASSETS/
+├── images/
+└── fonts/
+
+06_CONFIG/
+├── config.json
+└── .env
+
+07_SCRIPT/
+├── build.js
+└── deploy.sh
+```
+
+## DevOps & Automation Features
+
+This template includes comprehensive DevOps and automation features:
+
+### CI/CD Pipeline
+
+- **GitHub Actions**: Automated CI/CD pipeline with quality checks, testing, building, and deployment
+- **Multi-stage pipeline**: Quality → Test → Build → Docker → Deploy
+- **Security scanning**: Automated vulnerability scanning with Trivy
+- **Performance testing**: Integrated performance test execution
+
+### Containerization
+
+- **Docker**: Multi-stage Dockerfile for optimized builds
+- **Docker Compose**: Complete development environment with monitoring stack
+- **Security**: Non-root containers, proper health checks, resource limits
+
+### Infrastructure as Code
+
+- **Terraform**: AWS infrastructure provisioning (VPC, ECS, RDS, ElastiCache)
+- **Modular design**: Reusable Terraform modules for different environments
+- **State management**: Remote state storage with locking
+
+### Monitoring & Observability
+
+- **Prometheus**: Metrics collection and alerting
+- **Grafana**: Visualization and dashboards
+- **Loki**: Log aggregation and analysis
+- **Promtail**: Log shipping from applications
+
+### GitOps Workflows
+
+- **Automated deployments**: GitOps-based deployment scripts
+- **Kubernetes manifests**: Ready-to-use deployment configurations
+- **Environment management**: Staging and production deployment workflows
+
+### Security Features
+
+- **Security headers**: Comprehensive HTTP security headers configuration
+- **CORS policies**: Configurable cross-origin resource sharing
+- **Rate limiting**: Protection against abuse and DoS attacks
+- **Input validation**: XSS and SQL injection prevention
+- **Audit logging**: Comprehensive security event logging
+
+### Code Quality
+
+- **ESLint**: JavaScript/TypeScript linting with security rules
+- **Prettier**: Automated code formatting
+- **Security scanning**: Dependency vulnerability checks
+- **Git hooks**: Pre-commit quality checks
+
+## Quick Start with DevOps
+
+1. **Set up CI/CD**:
+
+   ```bash
+   # The GitHub Actions workflow will automatically run on push/PR
+   # Configure secrets in GitHub repository settings
+   ```
+
+2. **Local Development**:
+
+   ```bash
+   # Start full development environment
+   docker-compose up -d
+
+   # Access services:
+   # - App: http://localhost:3000
+   # - Grafana: http://localhost:3001
+   # - Prometheus: http://localhost:9090
+   ```
+
+3. **Deploy Infrastructure**:
+
+   ```bash
+   cd 04_DEPLOY/terraform
+   terraform init
+   terraform plan
+   terraform apply
+   ```
+
+4. **GitOps Deployment**:
+
+   ```bash
+   # Deploy to staging
+   ./07_SCRIPT/gitops-deploy.sh staging
+
+   # Deploy to production
+   ./07_SCRIPT/gitops-deploy.sh production
+   ```
+   
+   ## Quick Start
+   
+   Get up and running in minutes:
+   
+   ```bash
+   # 1. Clone and setup
+   git clone https://github.com/your-repo/project-template.git
+   cd project-template
+   npm install
+   
+   # 2. Configure environment
+   cp 06_CONFIG/.env.example 06_CONFIG/.env
+   # Edit .env with your settings
+   
+   # 3. Run the examples
+   npm start          # Run JavaScript version
+   npm run start:ts   # Run TypeScript version
+   python 01_SRC/main.py  # Run Python version
+   
+   # 4. Development with hot reload
+   npm run dev        # JavaScript development
+   npm run dev:ts     # TypeScript development
+   ```
+   
+   ## Available Scripts
+   
+   This template includes comprehensive npm scripts for development, testing, and deployment:
+   
+   ### Development
+   ```bash
+   npm start              # Run JavaScript application
+   npm run start:ts       # Run TypeScript application
+   npm run dev            # Development with nodemon (JS)
+   npm run dev:ts         # Development with nodemon (TS)
+   ```
+   
+   ### Code Quality
+   ```bash
+   npm run lint           # Lint all JS/TS files
+   npm run lint:fix       # Auto-fix linting issues
+   npm run lint:js        # Lint only JavaScript files
+   npm run lint:ts        # Lint only TypeScript files
+   npm run format         # Format code with Prettier
+   npm run format:check   # Check code formatting
+   npm run typecheck      # TypeScript type checking
+   ```
+   
+   ### Testing & Building
+   ```bash
+   npm test               # Run Jest tests
+   npm run test:watch     # Run tests in watch mode
+   npm run test:coverage  # Run tests with coverage
+   npm run build          # Full build (lint + test + TS compile)
+   npm run build:ts       # TypeScript compilation only
+   ```
+   
+   ### Security
+   ```bash
+   npm run security       # Comprehensive security checks
+   npm run security:audit # NPM audit for vulnerabilities
+   npm run security:lint  # ESLint security rules
+   npm run security:fix   # Auto-fix security issues
+   ```
+   
+   ## Development Workflow
+   
+   ### JavaScript Development
+   ```bash
+   # Start development server
+   npm run dev
+   
+   # The application will restart automatically on file changes
+   # Access at http://localhost:3000
+   ```
+   
+   ### TypeScript Development
+   ```bash
+   # Start TypeScript development server
+   npm run dev:ts
+   
+   # TypeScript files are automatically compiled and restarted
+   # Full type checking and IntelliSense support
+   ```
+   
+   ### Code Quality Workflow
+   ```bash
+   # Before committing, run quality checks
+   npm run lint
+   npm run format
+   npm run typecheck
+   npm test
+   
+   # Or run the full build pipeline
+   npm run build
+   ```
+   
+   ### Adding New Features
+   1. **JavaScript**: Add files to `01_SRC/` with `.js` extension
+   2. **TypeScript**: Add files to `01_SRC/` with `.ts` extension
+   3. **Python**: Add files to `01_SRC/` with `.py` extension
+   4. **Tests**: Add test files to `02_TEST/` following naming convention
+   
+   ## Troubleshooting
+   
+   ### Common Issues
+   
+   #### 1. Module Not Found Errors
+   ```bash
+   # Clear node_modules and reinstall
+   rm -rf node_modules package-lock.json
+   npm install
+   ```
+   
+   #### 2. TypeScript Compilation Errors
+   ```bash
+   # Check TypeScript configuration
+   npm run typecheck
+   
+   # Clean and rebuild
+   rm -rf node_modules dist
+   npm install
+   npm run build:ts
+   ```
+   
+   #### 3. Linting Errors
+   ```bash
+   # Auto-fix common issues
+   npm run lint:fix
+   
+   # Check specific file types
+   npm run lint:js    # JavaScript only
+   npm run lint:ts    # TypeScript only
+   ```
+   
+   #### 4. Environment Configuration Issues
+   ```bash
+   # Verify .env file exists and is properly formatted
+   ls -la 06_CONFIG/.env
+   
+   # Check environment variables are loaded
+   node -e "console.log(require('dotenv').config({ path: '06_CONFIG/.env' }))"
+   ```
+   
+   #### 5. Port Already in Use
+   ```bash
+   # Find process using the port
+   lsof -i :3000
+   
+   # Kill the process
+   kill -9 <PID>
+   
+   # Or use a different port in .env
+   PORT=3001 npm start
+   ```
+   
+   #### 6. Permission Errors
+   ```bash
+   # Fix script permissions
+   chmod +x 07_SCRIPT/*.sh
+   
+   # Or run with explicit permissions
+   bash 07_SCRIPT/build.sh
+   ```
+   
+   ### Development Environment Issues
+   
+   #### Node.js Version Mismatch
+   ```bash
+   # Check current version
+   node --version
+   
+   # Use nvm to switch versions
+   nvm use 18
+   nvm alias default 18
+   ```
+   
+   #### Python Environment Issues
+   ```bash
+   # Create virtual environment
+   python -m venv venv
+   source venv/bin/activate  # Linux/Mac
+   # or
+   venv\Scripts\activate     # Windows
+   
+   # Install dependencies
+   pip install -r requirements.txt
+   ```
+   
+   #### Docker Issues
+   ```bash
+   # Check Docker is running
+   docker --version
+   docker-compose --version
+   
+   # Clean Docker system
+   docker system prune -a
+   ```
+   
+   ### Build and Deployment Issues
+   
+   #### Build Failures
+   ```bash
+   # Clean build artifacts
+   rm -rf 03_BUILD/*
+   npm run build
+   
+   # Check for TypeScript errors
+   npm run typecheck
+   ```
+   
+   #### Test Failures
+   ```bash
+   # Run tests with verbose output
+   npm test -- --verbose
+   
+   # Run specific test
+   npm test -- --testNamePattern="specific test"
+   ```
+   
+   ### Performance Issues
+   
+   #### Slow Development Server
+   ```bash
+   # Use production build for testing
+   npm run build
+   npm start
+   
+   # Or optimize development config
+   NODE_ENV=production npm run dev
+   ```
+   
+   #### Memory Issues
+   ```bash
+   # Increase Node.js memory limit
+   NODE_OPTIONS="--max-old-space-size=4096" npm start
+   
+   # Monitor memory usage
+   node --expose-gc --inspect
+   ```
+   
+   ## Security
+   
+   This template includes comprehensive security features:
+   
+   ### Automated Security Scanning
+   ```bash
+   # Run all security checks
+   npm run security
+   
+   # Individual security checks
+   npm run security:audit    # Dependency vulnerabilities
+   npm run security:lint     # Code security issues
+   ```
+   
+   ### Security Best Practices
+   
+   #### 1. Environment Variables
+   - Never commit `.env` files to version control
+   - Use strong, unique secrets for production
+   - Rotate secrets regularly
+   
+   #### 2. Dependency Management
+   ```bash
+   # Regular security audits
+   npm audit
+   npm run security:audit
+   
+   # Update dependencies safely
+   npm update
+   npm audit fix
+   ```
+   
+   #### 3. Code Security
+   - ESLint security rules are automatically enforced
+   - Avoid dangerous functions (`eval`, `new Function`)
+   - Use parameterized queries for database operations
+   - Implement proper input validation
+   
+   #### 4. Container Security
+   ```bash
+   # Scan Docker images for vulnerabilities
+   docker scan <image-name>
+   
+   # Use non-root user in containers
+   # Follow principle of least privilege
+   ```
+   
+   ### Security Configuration
+   
+   The security configuration is defined in `06_CONFIG/security.json`:
+   
+   ```json
+   {
+     "scanning": {
+       "schedule": "weekly",
+       "automated": true,
+       "failOnHighSeverity": true
+     },
+     "vulnerability": {
+       "severityThresholds": {
+         "critical": 0,
+         "high": 0,
+         "moderate": 5
+       }
+     }
+   }
+   ```
+   
+   ## Performance
+   
+   ### Optimization Features
+   
+   #### 1. Build Optimization
+   ```bash
+   # Production build with optimizations
+   npm run build
+   
+   # Analyze bundle size
+   npm install -g webpack-bundle-analyzer
+   npx webpack-bundle-analyzer 03_BUILD/static/js/*.js
+   ```
+   
+   #### 2. Development Performance
+   ```bash
+   # Fast refresh for React-like development
+   npm run dev:ts
+   
+   # Parallel processing for builds
+   npm run build  # Uses parallel processing
+   ```
+   
+   #### 3. Code Splitting
+   ```typescript
+   // Dynamic imports for better performance
+   const module = await import('./heavy-module');
+   ```
+   
+   #### 4. Memory Optimization
+   ```javascript
+   // Proper cleanup
+   if (global.gc) {
+     global.gc();
+   }
+   
+   // Efficient data structures
+   const map = new Map(); // Better than plain objects for frequent additions/removals
+   ```
+   
+   ### Monitoring Performance
+   
+   #### Application Metrics
+   ```javascript
+   // Basic performance monitoring
+   console.time('operation');
+   // ... your code ...
+   console.timeEnd('operation');
+   
+   // Memory usage
+   const memUsage = process.memoryUsage();
+   console.log(`Memory: ${Math.round(memUsage.heapUsed / 1024 / 1024)} MB`);
+   ```
+   
+   #### Database Optimization
+   ```python
+   # Efficient database queries
+   from sqlalchemy.orm import selectinload
+   
+   # Use selectinload for eager loading
+   query = session.query(User).options(selectinload(User.posts))
+   ```
+   
+   ### Performance Best Practices
+   
+   1. **Code Splitting**: Split large bundles into smaller chunks
+   2. **Lazy Loading**: Load components only when needed
+   3. **Caching**: Implement proper caching strategies
+   4. **Database Indexing**: Ensure proper database indexes
+   5. **CDN Usage**: Serve static assets from CDN
+   6. **Compression**: Enable gzip/brotli compression
+   7. **Minification**: Minify code for production
+   
+   ## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project template is licensed under the MIT License - see the LICENSE file in `00_DOCS/` for details.

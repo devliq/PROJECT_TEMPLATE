@@ -1,0 +1,22 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "🔍 Running pre-commit quality checks..."
+
+# Run lint-staged first (handles formatting and basic linting)
+echo "📝 Running lint-staged..."
+npx lint-staged
+
+# Run TypeScript type checking
+echo "🔧 Running TypeScript type checking..."
+npm run typecheck
+
+# Run security checks
+echo "🔒 Running security checks..."
+npm run security:audit
+
+# Run comprehensive tests
+echo "🧪 Running tests..."
+npm test
+
+echo "✅ All pre-commit checks passed!"

@@ -1,0 +1,86 @@
+{
+  "name": "project-template",
+  "version": "1.0.0",
+  "description": "A comprehensive project template with modern tooling",
+  "main": "01_SRC/index.js",
+  "scripts": {
+    "start": "node 01_SRC/index.js",
+    "start:ts": "ts-node 01_SRC/index.ts",
+    "dev": "nodemon 01_SRC/index.js",
+    "dev:ts": "nodemon --exec ts-node 01_SRC/index.ts",
+    "build": "npm run lint && npm run test && npm run build:ts && echo 'Build completed'",
+    "build:ts": "tsc",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint --config 06_CONFIG/.eslintrc.js '01_SRC/**/*.{js,ts}'",
+    "lint:fix": "eslint --config 06_CONFIG/.eslintrc.js --fix '01_SRC/**/*.{js,ts}'",
+    "lint:js": "eslint --config 06_CONFIG/.eslintrc.js '01_SRC/**/*.js'",
+    "lint:ts": "eslint --config 06_CONFIG/.eslintrc.js '01_SRC/**/*.ts'",
+    "format": "prettier --config 06_CONFIG/.prettierrc --write '01_SRC/**/*.{js,ts,json}'",
+    "format:check": "prettier --config 06_CONFIG/.prettierrc --check '01_SRC/**/*.{js,ts,json}'",
+    "security": "npm run security:audit && npm run security:lint && npm run security:check",
+    "security:audit": "npm audit --audit-level moderate",
+    "security:lint": "eslint --config 06_CONFIG/.eslintrc.js --plugin security '01_SRC/**/*.{js,ts}'",
+    "security:check": "echo '🔍 Running comprehensive security checks...' && npm run security:audit && npm run security:lint && echo '✅ Security checks completed'",
+    "security:fix": "npm audit fix",
+    "typecheck": "tsc --noEmit",
+    "prepare": "husky"
+  },
+  "keywords": [
+    "template",
+    "project",
+    "nodejs",
+    "javascript",
+    "development"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^7.8.0",
+    "@typescript-eslint/parser": "^7.8.0",
+    "eslint": "^8.57.0",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-promise": "^6.1.1",
+    "eslint-plugin-security": "^3.0.0",
+    "eslint-plugin-unicorn": "^52.0.0",
+    "husky": "^9.0.11",
+    "jest": "^29.7.0",
+    "lint-staged": "^15.2.2",
+    "nodemon": "^3.1.0",
+    "prettier": "^3.2.5",
+    "supertest": "^6.3.4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "lint-staged": {
+    "*.{js,ts}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md}": [
+      "prettier --write"
+    ],
+    "*.py": [
+      "python -m black --check",
+      "python -m flake8"
+    ]
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "collectCoverageFrom": [
+      "01_SRC/**/*.js",
+      "!01_SRC/**/*.test.js"
+    ],
+    "testMatch": [
+      "**/__tests__/**/*.js",
+      "**/?(*.)+(spec|test).js"
+    ]
+  }
+}

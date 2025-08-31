@@ -1,0 +1,25 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "📊 Post-commit tasks..."
+
+# Optional: Run light checks that don't block the commit
+echo "🔄 Running post-commit cleanup..."
+
+# Clean temporary files if any
+if [ -d "temp" ]; then
+    find temp -name "*.tmp" -type f -delete 2>/dev/null || true
+fi
+
+# Optional: Update documentation or run light analysis
+echo "📈 Analyzing commit impact..."
+
+# Get commit info
+commit_hash=$(git rev-parse HEAD)
+commit_msg=$(git log -1 --pretty=%B)
+
+echo "✅ Commit $commit_hash completed successfully"
+echo "📝 Message: $commit_msg"
+
+# Optional: Send notifications or trigger CI
+# This could be extended to send Slack notifications, trigger deployments, etc.
