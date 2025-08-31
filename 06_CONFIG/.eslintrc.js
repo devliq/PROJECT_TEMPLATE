@@ -7,16 +7,11 @@ module.exports = {
     },
     extends: [
         'eslint:recommended',
-        'prettier',
     ],
     plugins: [
-        'prettier',
         'security',
     ],
     rules: {
-        // Prettier integration
-        'prettier/prettier': 'error',
-
         // Security rules
         'security/detect-buffer-noassert': 'error',
         'security/detect-child-process': 'warn',

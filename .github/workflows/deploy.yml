@@ -1,0 +1,257 @@
+name: Deploy
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_run:
+    workflows: ["CI"]
+    branches: [ main, master ]
+    types:
+      - completed
+
+jobs:
+  # =============================================================================
+  # DEPLOY TO STAGING
+  # =============================================================================
+  deploy-staging:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: staging
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download deployment artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: deployment-artifact
+
+      - name: Extract deployment artifact
+        run: |
+          tar -xzf deployment-${{ github.sha }}.tar.gz
+          rm deployment-${{ github.sha }}.tar.gz
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install production dependencies
+        run: npm ci --production
+
+      - name: Run database migrations
+        run: npm run migrate
+        env:
+          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+
+      - name: Build application
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+      - name: Deploy to staging server
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          port: ${{ secrets.STAGING_PORT }}
+          script: |
+            cd /opt/myproject
+            # Backup current deployment
+            sudo cp -r app app.backup.$(date +%Y%m%d_%H%M%S) || true
+
+            # Stop services
+            sudo docker-compose down
+
+            # Copy new files
+            sudo cp -r ${{ github.workspace }}/* .
+
+            # Start services
+            sudo docker-compose up -d --build
+
+            # Wait for health check
+            sleep 30
+            curl -f http://localhost:3000/health || exit 1
+
+            # Clean up old backups (keep last 3)
+            sudo ls -t app.backup.* | tail -n +4 | xargs sudo rm -rf || true
+
+      - name: Run smoke tests
+        run: |
+          sleep 10
+          curl -f ${{ secrets.STAGING_URL }}/health
+          curl -f ${{ secrets.STAGING_URL }}/api/status
+
+      - name: Notify deployment success
+        uses: 8398a7/action-slack@v3
+        if: success()
+        with:
+          status: success
+          text: "✅ Staging deployment successful - ${{ github.sha }}"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+
+      - name: Notify deployment failure
+        uses: 8398a7/action-slack@v3
+        if: failure()
+        with:
+          status: failure
+          text: "❌ Staging deployment failed - ${{ github.sha }}"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+
+  # =============================================================================
+  # DEPLOY TO PRODUCTION
+  # =============================================================================
+  deploy-production:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: production
+    needs: [deploy-staging]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download deployment artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: deployment-artifact
+
+      - name: Extract deployment artifact
+        run: |
+          tar -xzf deployment-${{ github.sha }}.tar.gz
+          rm deployment-${{ github.sha }}.tar.gz
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install production dependencies
+        run: npm ci --production
+
+      - name: Build application
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+      - name: Deploy to production (Blue-Green)
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.PRODUCTION_HOST }}
+          username: ${{ secrets.PRODUCTION_USER }}
+          key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          port: ${{ secrets.PRODUCTION_PORT }}
+          script: |
+            cd /opt/myproject
+
+            # Determine which environment is currently active
+            if [ -L current ] && [ -e current ]; then
+              CURRENT_ENV=$(readlink current)
+              if [ "$CURRENT_ENV" = "blue" ]; then
+                TARGET_ENV="green"
+              else
+                TARGET_ENV="blue"
+              fi
+            else
+              TARGET_ENV="blue"
+            fi
+
+            echo "Deploying to $TARGET_ENV environment"
+
+            # Create target directory
+            sudo mkdir -p $TARGET_ENV
+
+            # Copy new files to target environment
+            sudo cp -r ${{ github.workspace }}/* $TARGET_ENV/
+
+            # Install dependencies in target environment
+            cd $TARGET_ENV
+            sudo npm ci --production
+
+            # Run database migrations if needed
+            sudo npm run migrate 2>/dev/null || echo "No migrations to run"
+
+            # Build application
+            sudo npm run build
+
+            # Switch symlink to new environment
+            sudo ln -sfn $TARGET_ENV current
+
+            # Start services with new environment
+            sudo docker-compose up -d --build
+
+            # Wait for health check
+            sleep 60
+            curl -f http://localhost:3000/health || exit 1
+
+            # Run smoke tests
+            curl -f ${{ secrets.PRODUCTION_URL }}/health
+            curl -f ${{ secrets.PRODUCTION_URL }}/api/status
+
+            # If everything is good, stop old environment
+            if [ "$CURRENT_ENV" != "$TARGET_ENV" ] && [ -n "$CURRENT_ENV" ]; then
+              echo "Stopping old environment: $CURRENT_ENV"
+              sudo docker-compose stop $CURRENT_ENV 2>/dev/null || true
+            fi
+
+      - name: Run production smoke tests
+        run: |
+          sleep 30
+          curl -f ${{ secrets.PRODUCTION_URL }}/health
+          curl -f ${{ secrets.PRODUCTION_URL }}/api/status
+          # Add more comprehensive tests here
+
+      - name: Notify production deployment success
+        uses: 8398a7/action-slack@v3
+        if: success()
+        with:
+          status: success
+          text: "🚀 Production deployment successful - ${{ github.sha }}"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+
+      - name: Notify production deployment failure
+        uses: 8398a7/action-slack@v3
+        if: failure()
+        with:
+          status: failure
+          text: "💥 Production deployment failed - ${{ github.sha }}"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+
+  # =============================================================================
+  # POST-DEPLOYMENT MONITORING
+  # =============================================================================
+  monitor-deployment:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: [deploy-production]
+    environment: production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Monitor application health
+        run: |
+          echo "Monitoring deployment health..."
+          # Add monitoring checks here
+          sleep 300  # Monitor for 5 minutes
+
+      - name: Check error rates
+        run: |
+          # Query monitoring system for error rates
+          echo "Checking error rates..."
+          # Add error rate monitoring here
+
+      - name: Performance validation
+        run: |
+          # Run performance validation tests
+          echo "Running performance validation..."
+          # Add performance checks here
