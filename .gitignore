@@ -437,7 +437,6 @@ keys/
 *.lock
 *.lck
 yarn.lock
-package-lock.json
 
 # =============================================================================
 # CONFIGURATION FILES
