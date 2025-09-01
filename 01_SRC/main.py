@@ -230,7 +230,8 @@ def load_configuration() -> AppConfig:
         for key, value in os.environ.items():
             if is_sensitive_value(key, value):
                 logging.warning(
-                    "⚠️  Potential sensitive information detected in environment variable: %s",
+                    "⚠️  Potential sensitive information detected in environment "
+                    "variable: %s",
                     key,
                 )
                 logging.warning(
@@ -292,7 +293,8 @@ def validate_config(config: AppConfig) -> None:
     valid_environments = ["development", "staging", "production"]
     if config.environment.lower() not in valid_environments:
         raise ConfigurationError(
-            f"Invalid environment '{config.environment}'. Must be one of {valid_environments}"
+            f"Invalid environment '{config.environment}'. "
+            f"Must be one of {valid_environments}"
         )
 
 

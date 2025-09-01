@@ -13,6 +13,7 @@ import logging
 from unittest.mock import patch, MagicMock
 from pathlib import Path
 
+# Import main module for testing
 SRC = Path(__file__).parent.parent / "01_SRC"
 sys.path.insert(0, str(SRC))
 import main
