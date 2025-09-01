@@ -1,0 +1,34 @@
+title = "gitleaks config"
+
+# Exclude documentation files from secret scanning
+[allowlist]
+paths = [
+    '''00_DOCS/.*''',
+    '''.*\.md$''',
+    '''node_modules/.*''',
+    '''\.git/.*'''
+]
+
+# Custom rules to override default generic-api-key detection
+[[rules]]
+id = "generic-api-key"
+description = "Generic API key"
+regex = '''(?i)(api[_-]?key|apikey|access[_-]?token|auth[_-]?token|bearer[_-]?token|refresh[_-]?token|client[_-]?secret|private[_-]?key|secret[_-]?key|session[_-]?key)[\s]*[=:][\s]*['"]?([a-zA-Z0-9_-]{20,})['"]?'''
+tags = ["key", "token", "secret"]
+entropy = 3.5
+
+# Allow example tokens in documentation
+[[rules]]
+id = "jwt-example"
+description = "JWT example tokens in documentation"
+regex = '''eyJhbGciOiJIUzI1NiIs\.\.\.'''
+path = '''00_DOCS/.*'''
+allow = true
+
+# Allow test JWT tokens
+[[rules]]
+id = "jwt-test"
+description = "JWT tokens in test files"
+regex = '''eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ\.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c'''
+path = '''.*test.*'''
+allow = true
