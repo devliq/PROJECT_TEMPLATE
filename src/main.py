@@ -21,8 +21,10 @@ from pathlib import Path
 from typing import Dict, Any, Optional
 from dataclasses import dataclass
 import traceback
-
-import typer
+try:
+    import typer
+except ImportError:
+    typer = None
 from dotenv import load_dotenv
 
 
@@ -209,9 +211,9 @@ def load_configuration() -> AppConfig:
             return get_default_config()
 
         # Load environment variables with error handling for dotenv
-        if load_dotenv:
+        try:
             load_dotenv(env_path)
-        else:
+        except ImportError:
             logging.warning("dotenv not available. Using default configuration.")
             return get_default_config()
 
@@ -351,21 +353,30 @@ class GreetingService:
         if not rate_limiter.is_allowed(identifier):
             raise ValueError("Rate limit exceeded. Please try again later.")
 
+        # Validate original input before sanitization
+        if not isinstance(name, str):
+            raise ValueError("Name must be a string")
+
+        if not name.strip():
+            raise ValueError("Name cannot be empty")
+
+        if len(name) > 50:
+            raise ValueError("Name must be between 1 and 50 characters long")
+
+        if "\n" in name or "\t" in name:
+            raise ValueError("Name cannot contain newlines or tabs")
+
         # Input sanitization
         sanitized_name = sanitize_input(name, max_length=50, strip_html=True)
 
         if not sanitized_name:
             raise ValueError("Name cannot be empty after sanitization")
 
-        # Validate name length and characters
-        if len(sanitized_name) < 1 or len(sanitized_name) > 50:
+        # Validate name length and characters after sanitization
+        if len(sanitized_name) < 1:
             raise ValueError("Name must be between 1 and 50 characters long")
 
-        if (
-            not re.match(r"^[a-zA-Z\s\-']+$", sanitized_name)
-            or "\n" in sanitized_name
-            or "\t" in sanitized_name
-        ):
+        if not re.match(r"^[a-zA-Z\s\-']+$", sanitized_name):
             raise ValueError(
                 "Name can only contain letters, spaces, hyphens, and apostrophes"
             )

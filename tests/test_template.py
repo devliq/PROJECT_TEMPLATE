@@ -14,6 +14,7 @@ from unittest.mock import Mock, patch
 from pathlib import Path
 import tempfile
 import shutil
+from src import main
 
 # Add the src directory to the path so we can import modules
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
@@ -51,37 +52,37 @@ class TestTemplate(unittest.TestCase):
         self.mock_object.some_method.return_value = "mocked result"
 
         # Act
-        # result = function_that_uses_mock(self.mock_object)
+        result = self.mock_object.some_method()
 
         # Assert
-        # self.assertEqual(result, "mocked result")
+        self.assertEqual(result, "mocked result")
         self.mock_object.some_method.assert_called_once()
 
-    @patch("module.function_to_mock")
+    @patch("main.sanitize_input")
     def test_with_patch_decorator(self, mock_function):
         """Example of testing with patch decorator"""
         # Arrange
         mock_function.return_value = "patched result"
 
         # Act
-        # result = function_that_calls_module_function()
+        result = main.sanitize_input("input")
 
         # Assert
-        # self.assertEqual(result, "patched result")
-        mock_function.assert_called_once()
+        self.assertEqual(result, "patched result")
+        mock_function.assert_called_once_with("input")
 
     def test_context_manager_mocking(self):
         """Example of testing with context manager mocking"""
-        with patch("module.function_to_mock") as mock_function:
+        with patch("main.sanitize_input") as mock_function:
             # Arrange
-            mock_function.return_value = "context result"
+            mock_function.return_value = "sanitized input"
 
             # Act
-            # result = function_that_calls_module_function()
+            result = main.sanitize_input("test input")
 
             # Assert
-            # self.assertEqual(result, "context result")
-            mock_function.assert_called_once()
+            self.assertEqual(result, "sanitized input")
+            mock_function.assert_called_once_with("test input")
 
     def test_edge_cases(self):
         """Test edge cases and error conditions"""
@@ -120,7 +121,7 @@ class TestTemplate(unittest.TestCase):
                 # result = my_function(input_val)
 
                 # Assert
-                # self.assertEqual(result, expected)
+                # self.assertEqual(result, _)
                 pass
 
     def test_assertion_methods(self):
@@ -266,7 +267,7 @@ class TestParameterized(unittest.TestCase):
         for param, _ in [("a", 1), ("b", 2), ("c", 3)]:
             with self.subTest(param=param):
                 # result = process_param(param)
-                # self.assertEqual(result, expected)
+                # self.assertEqual(result, _)
                 pass
 
 
