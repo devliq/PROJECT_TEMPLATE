@@ -7,19 +7,12 @@ in the main application.
 """
 
 import sys
-import unittest
-import logging
-from unittest.mock import patch, MagicMock
 import os
-sys.path.insert(
-    0,
-    os.path.join(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-        "01_SRC"
-    )
-)
-import main
-from main import (
+import unittest  # noqa: E402
+import logging  # noqa: E402
+from unittest.mock import patch, MagicMock  # noqa: E402
+import main  # noqa: E402
+from main import (  # noqa: E402
     AppConfig,
     ConfigurationError,
     load_configuration,
@@ -33,10 +26,7 @@ from main import (
     sanitize_input,
     is_sensitive_value,
 )
-
-
-# Import main module for testing
-
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 class TestAppConfig(unittest.TestCase):
     """Test cases for AppConfig dataclass."""
