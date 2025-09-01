@@ -1,6 +1,3 @@
-#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
-
 echo "📊 Post-commit tasks..."
 
 # Optional: Run light checks that don't block the commit
