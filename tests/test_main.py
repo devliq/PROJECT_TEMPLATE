@@ -535,11 +535,9 @@ class TestIntegration(unittest.TestCase):
     @patch("main.load_dotenv")
     @patch("main.sys.exit")
     def test_application_handles_keyboard_interrupt(
-        self, mock_main_path_exists, mock_main_load_dotenv, mock_sys_exit
+        self, mock_sys_exit, mock_load_dotenv, mock_path_exists
     ):
         """Test that application handles keyboard interrupt gracefully."""
-        # Correct the mock assignments based on the actual order
-        actual_mock_sys_exit = mock_sys_exit
 
         with patch.dict(
             os.environ,
@@ -566,7 +564,7 @@ class TestIntegration(unittest.TestCase):
                             mock_info.assert_called_with(
                                 "🛑 Application interrupted by user"
                             )
-                            actual_mock_sys_exit.assert_called_with(0)
+                            mock_sys_exit.assert_called_with(0)
 
 
 class TestSecurityFunctions(unittest.TestCase):

@@ -14,6 +14,7 @@ from unittest.mock import Mock, patch
 from pathlib import Path
 import tempfile
 import shutil
+import pytest
 from src import main
 
 # Add the src directory to the path so we can import modules
@@ -58,7 +59,7 @@ class TestTemplate(unittest.TestCase):
         self.assertEqual(result, "mocked result")
         self.mock_object.some_method.assert_called_once()
 
-    @patch("main.sanitize_input")
+    @patch("src.main.sanitize_input")
     def test_with_patch_decorator(self, mock_function):
         """Example of testing with patch decorator"""
         # Arrange
@@ -73,7 +74,7 @@ class TestTemplate(unittest.TestCase):
 
     def test_context_manager_mocking(self):
         """Example of testing with context manager mocking"""
-        with patch("main.sanitize_input") as mock_function:
+        with patch("src.main.sanitize_input") as mock_function:
             # Arrange
             mock_function.return_value = "sanitized input"
 
@@ -154,6 +155,7 @@ class TestTemplate(unittest.TestCase):
 class TestAsyncFunctionality(unittest.TestCase):
     """Template for testing async functions"""
 
+    @pytest.mark.asyncio
     async def test_async_function(self):
         """Test async function"""
         # Arrange
@@ -164,6 +166,7 @@ class TestAsyncFunctionality(unittest.TestCase):
         # Assert
         # self.assertEqual(result, expected_result)
 
+    @pytest.mark.asyncio
     @patch("module.async_function_to_mock")
     async def test_async_with_mock(self, mock_async_func):
         """Test async function with mocking"""
