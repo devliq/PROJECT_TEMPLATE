@@ -2,7 +2,7 @@
   "name": "project-template",
   "version": "1.0.0",
   "description": "A comprehensive project template with modern tooling",
-  "main": "01_SRC/index.js",
+  "main": "01_SRC/index.ts",
   "scripts": {
     "start": "node 01_SRC/index.js",
     "start:ts": "ts-node 01_SRC/index.ts",
@@ -49,15 +49,19 @@
     "url": "https://github.com/sponsors/project-template"
   },
   "dependencies": {
-    "dotenv": "^16.4.5"
+    "@google/gemini-cli": "^0.2.2",
+    "dotenv": "^16.4.5",
+    "nodejs": "^0.0.0",
+    "npm": "^11.5.2",
+    "typescript-eslint": "^8.41.0"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
     "@typescript-eslint/eslint-plugin": "^8.41.0",
     "@typescript-eslint/parser": "^8.41.0",
-    "eslint": "^8.57.0",
+    "eslint": "^9.34.0",
     "eslint-plugin-security": "^3.0.0",
-    "husky": "^9.0.11",
+    "husky": "^9.1.7",
     "jest": "^29.7.0",
     "lint-staged": "^15.2.2",
     "nodemon": "^3.1.0",
@@ -72,7 +76,7 @@
   },
   "lint-staged": {
     "*.{js,ts}": [
-      "./node_modules/.bin/eslint --fix",
+      "./node_modules/.bin/eslint --fix --max-warnings 10",
       "./node_modules/.bin/prettier --write"
     ],
     "*.{json,md}": [

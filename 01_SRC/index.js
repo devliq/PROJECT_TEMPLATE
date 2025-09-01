@@ -21,7 +21,7 @@ const fs = require("fs").promises;
  */
 const logger = {
   info: (message, ...args) => console.log(`ℹ️  ${message}`, ...args),
-  warn: (message, ...args) => console.warn(`⚠️  ${message}`, ...args),
+  warn: (message, ...args) => console.warn(`⚠️ ${message}`, ...args),
   error: (message, ...args) => console.error(`❌ ${message}`, ...args),
   debug: (message, ...args) => console.debug(`🐛 ${message}`, ...args),
 };
@@ -38,30 +38,29 @@ let appConfig = null;
  * @returns {Object} Configuration object
  */
 async function loadConfiguration() {
+  // Resolve the .env file path relative to the project root
+  const envPath = path.resolve(__dirname, "../06_CONFIG/.env");
+
+  // Check if .env file exists
   try {
-    // Resolve the .env file path relative to the project root
-    const envPath = path.resolve(__dirname, "../06_CONFIG/.env");
+    await fs.access(envPath);
+  } catch {
+    logger.warn(".env file not found. Using default configuration.");
+    return getDefaultConfig();
+  }
 
-    // Check if .env file exists
-    try {
-      await fs.access(envPath);
-    } catch {
-      logger.warn(".env file not found. Using default configuration.");
-      return getDefaultConfig();
+  // Load environment variables with error handling
+  let dotenvConfig;
+  try {
+    dotenvConfig = require("dotenv").config({ path: envPath });
+    if (dotenvConfig.error) {
+      throw dotenvConfig.error;
     }
+  } catch (error) {
+    throw new Error(`Failed to load configuration: ${error.message}`);
+  }
 
-    // Load environment variables with error handling
-    let dotenvConfig;
-    try {
-      dotenvConfig = require("dotenv").config({ path: envPath });
-      if (dotenvConfig.error) {
-        throw dotenvConfig.error;
-      }
-    } catch (error) {
-      logger.error("Failed to load dotenv:", error.message);
-      return getDefaultConfig();
-    }
-
+  try {
     // Validate and parse environment variables
     const appName = process.env.APP_NAME ?? "Project Template";
     if (typeof appName !== "string" || appName.trim().length === 0) {

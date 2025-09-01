@@ -108,7 +108,10 @@ async function loadConfiguration(): Promise<AppConfig> {
     }
 
     // Load environment variables
-    dotenv.config({ path: envPath });
+    const dotenvConfig = dotenv.config({ path: envPath });
+    if (dotenvConfig.error) {
+      throw dotenvConfig.error;
+    }
 
     const config: AppConfig = {
       appName: process.env.APP_NAME ?? "Project Template",
@@ -123,10 +126,16 @@ async function loadConfiguration(): Promise<AppConfig> {
 
     return config;
   } catch (error) {
-    if (error instanceof ConfigurationError) {
+    if (error instanceof ValidationError) {
       throw error;
+    } else if (error instanceof ConfigurationError) {
+      throw error;
+    } else {
+      throw new ConfigurationError(
+        `Failed to load configuration: ${(error as Error).message}`,
+        error as Error,
+      );
     }
-    throw new ConfigurationError(`Failed to load configuration: ${error}`, error as Error);
   }
 }
 
@@ -144,7 +153,7 @@ function validateConfig(config: AppConfig): void {
     throw new ValidationError("Port must be a valid number between 1 and 65535", "port");
   }
 
-  const validEnvironments = ["development", "staging", "production"];
+  const validEnvironments = ["development", "staging", "production", "test"];
   if (!validEnvironments.includes(config.environment)) {
     throw new ValidationError(
       `Environment must be one of: ${validEnvironments.join(", ")}`,
@@ -367,9 +376,9 @@ async function initialize(): Promise<void> {
     } else {
       // Fallback to console if logger not initialized
       if (error instanceof ValidationError) {
-        console.error(`❌ Validation Error [${error.field}]:`, error.message);
+        console.error(`❌ Validation Error [${error.field}]: ${error.message}`);
       } else if (error instanceof ConfigurationError) {
-        console.error("❌ Configuration Error:", error.message);
+        console.error(`❌ Configuration Error: ${error.message}`);
       } else {
         console.error("❌ Application initialization failed:", error);
       }

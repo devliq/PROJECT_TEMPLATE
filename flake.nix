@@ -88,23 +88,15 @@
             nodejsEnv
           ] ++ devTools;
 
-          # Clear LC_ALL to prevent locale warnings
-          LC_ALL = "";
+          # Set locale to C to prevent warnings
+          LC_ALL = "C";
+          LANG = "C";
+          LANGUAGE = "C";
 
           shellHook = ''
-            # Clear LC_ALL immediately to prevent locale warnings
-            export LC_ALL=""
-
             echo "🚀 Welcome to the Nix flake development environment!"
             echo "📦 System: ${system}"
             echo "🔧 Project root: $PWD"
-
-            # Set up locale configuration to prevent warnings
-            export LOCALE_ARCHIVE="${pkgs.glibcLocales}/lib/locale/locale-archive"
-            export LANG="C.utf8"
-            export LC_CTYPE="C.utf8"
-            export LC_COLLATE="C.utf8"
-            export LC_MESSAGES="C.utf8"
 
             # Set up environment
             export PROJECT_ROOT="$PWD"
@@ -140,43 +132,29 @@
 
         # Alternative shells for different purposes
         devShells.python = pkgs.mkShell {
-          buildInputs = [ pythonEnv ] ++ (with pkgs; [ black flake8 mypy glibcLocales ]);
+          buildInputs = [ pythonEnv ] ++ (with pkgs; [ black flake8 mypy ]);
 
-          # Clear LC_ALL to prevent locale warnings
-          LC_ALL = "";
+          # Set locale to C to prevent warnings
+          LC_ALL = "C";
+          LANG = "C";
+          LANGUAGE = "C";
 
           shellHook = ''
-            # Clear LC_ALL immediately to prevent locale warnings
-            export LC_ALL=""
-
             echo "🐍 Python development environment"
-            # Set up locale configuration
-            export LOCALE_ARCHIVE="${pkgs.glibcLocales}/lib/locale/locale-archive"
-            export LANG="C.utf8"
-            export LC_CTYPE="C.utf8"
-            export LC_COLLATE="C.utf8"
-            export LC_MESSAGES="C.utf8"
             export PYTHONPATH="$PROJECT_ROOT/src:$PYTHONPATH"
           '';
         };
 
         devShells.nodejs = pkgs.mkShell {
-          buildInputs = [ nodejsEnv ] ++ (with pkgs; [ yarn glibcLocales ]);
+          buildInputs = [ nodejsEnv ] ++ (with pkgs; [ yarn ]);
 
-          # Clear LC_ALL to prevent locale warnings
-          LC_ALL = "";
+          # Set locale to C to prevent warnings
+          LC_ALL = "C";
+          LANG = "C";
+          LANGUAGE = "C";
 
           shellHook = ''
-            # Clear LC_ALL immediately to prevent locale warnings
-            export LC_ALL=""
-
             echo "📦 Node.js development environment"
-            # Set up locale configuration
-            export LOCALE_ARCHIVE="${pkgs.glibcLocales}/lib/locale/locale-archive"
-            export LANG="C.utf8"
-            export LC_CTYPE="C.utf8"
-            export LC_COLLATE="C.utf8"
-            export LC_MESSAGES="C.utf8"
           '';
         };
 

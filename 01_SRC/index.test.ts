@@ -2,17 +2,29 @@
  * Unit tests for index.ts TypeScript classes and functions
  */
 
-// Create console spies that can be used in tests
-const consoleLogSpy = jest.spyOn(global.console, "log").mockImplementation();
-jest.spyOn(global.console, "warn").mockImplementation();
-const consoleErrorSpy = jest.spyOn(global.console, "error").mockImplementation();
-const consoleDebugSpy = jest.spyOn(global.console, "debug").mockImplementation();
+// Create mock console
+// eslint-disable @typescript-eslint/no-explicit-any
+type MockConsole = {
+  log: jest.MockedFunction<(message?: unknown, ...optionalParams: unknown[]) => void>;
+  warn: jest.MockedFunction<(message?: unknown, ...optionalParams: unknown[]) => void>;
+  error: jest.MockedFunction<(message?: unknown, ...optionalParams: unknown[]) => void>;
+  debug: jest.MockedFunction<(message?: unknown, ...optionalParams: unknown[]) => void>;
+  info: jest.MockedFunction<(message?: unknown, ...optionalParams: unknown[]) => void>;
+};
+
+const mockConsole: MockConsole = {
+  log: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  debug: jest.fn(),
+  info: jest.fn(),
+};
+
+global.console = mockConsole as unknown as typeof global.console;
 
 // Create mock objects for external dependencies
 const mockFs = {
-  promises: {
-    access: jest.fn(),
-  },
+  access: jest.fn(),
 };
 
 const mockPath = {
@@ -23,7 +35,7 @@ const mockDotenv = {
   config: jest.fn(),
 };
 
-jest.mock("fs", () => mockFs);
+jest.mock("fs/promises", () => mockFs);
 jest.mock("path", () => mockPath);
 jest.mock("dotenv", () => mockDotenv);
 
@@ -243,18 +255,23 @@ describe("loadConfiguration TS", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     process.env = {};
+    mockDotenv.config.mockImplementation(() => {
+      // Default mock - can be overridden in tests
+      return {};
+    });
   });
 
   test("should load configuration from .env file successfully", async () => {
-    process.env.APP_NAME = "Test App";
-    process.env.APP_VERSION = "1.2.3";
-    process.env.NODE_ENV = "production";
-    process.env.PORT = "3001";
-    process.env.DEBUG = "false";
-
-    mockFs.promises.access.mockResolvedValue(undefined);
+    mockFs.access.mockResolvedValue(undefined);
     mockPath.resolve.mockReturnValue("/path/to/.env");
-    mockDotenv.config.mockReturnValue({});
+    mockDotenv.config.mockImplementation(() => {
+      process.env.APP_NAME = "Test App";
+      process.env.APP_VERSION = "1.2.3";
+      process.env.NODE_ENV = "production";
+      process.env.PORT = "3001";
+      process.env.DEBUG = "false";
+      return {};
+    });
 
     const config = await loadConfiguration();
 
@@ -268,12 +285,11 @@ describe("loadConfiguration TS", () => {
   });
 
   test("should throw ConfigurationError for invalid configuration", async () => {
-    process.env.APP_NAME = "";
-    process.env.APP_VERSION = "1.0.0";
-
-    mockFs.promises.access.mockResolvedValue(undefined);
+    mockFs.access.mockResolvedValue(undefined);
     mockPath.resolve.mockReturnValue("/path/to/.env");
-    mockDotenv.config.mockReturnValue({});
+    mockDotenv.config.mockImplementation(() => {
+      throw new Error("Dotenv error");
+    });
 
     await expect(loadConfiguration()).rejects.toThrow(ConfigurationError);
   });
@@ -289,35 +305,43 @@ describe("initialize TS", () => {
       PORT: "3000",
       DEBUG: "true",
     };
-    mockFs.promises.access.mockResolvedValue(undefined);
+    mockFs.access.mockResolvedValue(undefined);
     mockPath.resolve.mockReturnValue("/path/to/.env");
-    mockDotenv.config.mockReturnValue({});
+    mockDotenv.config.mockImplementation(() => {
+      // Only set if not already set (to allow test overrides)
+      if (process.env.APP_NAME === undefined) process.env.APP_NAME = "Test App";
+      if (process.env.APP_VERSION === undefined) process.env.APP_VERSION = "1.0.0";
+      if (process.env.NODE_ENV === undefined) process.env.NODE_ENV = "test";
+      if (process.env.PORT === undefined) process.env.PORT = "3000";
+      if (process.env.DEBUG === undefined) process.env.DEBUG = "true";
+      return {};
+    });
   });
 
   test("should initialize application successfully", async () => {
     await initialize();
 
-    expect(consoleLogSpy).toHaveBeenCalledWith("🚀 Starting TypeScript application...");
-    expect(consoleLogSpy).toHaveBeenCalledWith("📱 App: Test App v1.0.0");
-    expect(consoleLogSpy).toHaveBeenCalledWith("🌍 Environment: test");
-    expect(consoleLogSpy).toHaveBeenCalledWith("🔧 Node.js: v16.0.0");
-    expect(consoleLogSpy).toHaveBeenCalledWith("📂 Platform: linux");
-    expect(consoleDebugSpy).toHaveBeenCalledWith("🐛 Debug mode enabled");
-    expect(consoleLogSpy).toHaveBeenCalledWith("\n📝 Example Usage:");
-    expect(consoleLogSpy).toHaveBeenCalledWith("Hello, Developer! Welcome to Test App");
-    expect(consoleLogSpy).toHaveBeenCalledWith("Hello, TypeScript User! Welcome to Test App");
-    expect(consoleLogSpy).toHaveBeenCalledWith("\n👥 Multiple Greetings:");
-    expect(consoleLogSpy).toHaveBeenCalledWith("  Hello, Alice! Welcome to Test App");
-    expect(consoleLogSpy).toHaveBeenCalledWith("  Hello, Bob! Welcome to Test App");
-    expect(consoleLogSpy).toHaveBeenCalledWith("  Hello, Charlie! Welcome to Test App");
-    expect(consoleLogSpy).toHaveBeenCalledWith("\n📊 Application Info:");
-    expect(consoleLogSpy).toHaveBeenCalledWith("  name: Test App");
-    expect(consoleLogSpy).toHaveBeenCalledWith("  version: 1.0.0");
-    expect(consoleLogSpy).toHaveBeenCalledWith("  environment: test");
-    expect(consoleLogSpy).toHaveBeenCalledWith("  uptime: 123.45");
-    expect(consoleLogSpy).toHaveBeenCalledWith("  nodeVersion: v16.0.0");
-    expect(consoleLogSpy).toHaveBeenCalledWith("  platform: linux");
-    expect(consoleLogSpy).toHaveBeenCalledWith("\n✅ Application initialized successfully!");
+    expect(mockConsole.log).toHaveBeenCalledWith("🚀 Starting TypeScript application...");
+    expect(mockConsole.log).toHaveBeenCalledWith("📱 App: Test App v1.0.0");
+    expect(mockConsole.log).toHaveBeenCalledWith("🌍 Environment: test");
+    expect(mockConsole.log).toHaveBeenCalledWith("🔧 Node.js: v16.0.0");
+    expect(mockConsole.log).toHaveBeenCalledWith("📂 Platform: linux");
+    expect(mockConsole.debug).toHaveBeenCalledWith("🐛 Debug mode enabled");
+    expect(mockConsole.log).toHaveBeenCalledWith("\n📝 Example Usage:");
+    expect(mockConsole.log).toHaveBeenCalledWith("Hello, Developer! Welcome to Test App");
+    expect(mockConsole.log).toHaveBeenCalledWith("Hello, TypeScript User! Welcome to Test App");
+    expect(mockConsole.log).toHaveBeenCalledWith("\n👥 Multiple Greetings:");
+    expect(mockConsole.log).toHaveBeenCalledWith("  Hello, Alice! Welcome to Test App");
+    expect(mockConsole.log).toHaveBeenCalledWith("  Hello, Bob! Welcome to Test App");
+    expect(mockConsole.log).toHaveBeenCalledWith("  Hello, Charlie! Welcome to Test App");
+    expect(mockConsole.log).toHaveBeenCalledWith("\n📊 Application Info:");
+    expect(mockConsole.log).toHaveBeenCalledWith("  name: Test App");
+    expect(mockConsole.log).toHaveBeenCalledWith("  version: 1.0.0");
+    expect(mockConsole.log).toHaveBeenCalledWith("  environment: test");
+    expect(mockConsole.log).toHaveBeenCalledWith("  uptime: 123.45");
+    expect(mockConsole.log).toHaveBeenCalledWith("  nodeVersion: v16.0.0");
+    expect(mockConsole.log).toHaveBeenCalledWith("  platform: linux");
+    expect(mockConsole.log).toHaveBeenCalledWith("\n✅ Application initialized successfully!");
   });
 
   test("should handle ValidationError during initialization", async () => {
@@ -326,19 +350,19 @@ describe("initialize TS", () => {
 
     await initialize();
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
+    expect(mockConsole.error).toHaveBeenCalledWith(
       "❌ Validation Error [appName]: App name cannot be empty",
     );
     expect(mockProcessExit).toHaveBeenCalledWith(1);
   });
 
   test("should handle ConfigurationError during initialization", async () => {
-    mockFs.promises.access.mockRejectedValue(new Error("File not found"));
+    mockFs.access.mockResolvedValue(undefined);
     mockDotenv.config.mockReturnValue({ error: new Error("Dotenv error") });
 
     await initialize();
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
+    expect(mockConsole.error).toHaveBeenCalledWith(
       "❌ Configuration Error: Failed to load configuration: Dotenv error",
     );
     expect(mockProcessExit).toHaveBeenCalledWith(1);
