@@ -1,0 +1,114 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard",
+    ":semanticPrefixFixDepsChoreOthers",
+    ":ignoreUnstable",
+    "group:monorepos",
+    "group:recommended",
+    "workarounds:all"
+  ],
+  "schedule": ["before 4am on Monday"],
+  "timezone": "America/New_York",
+  "labels": ["dependencies"],
+  "assignees": ["@me"],
+  "reviewers": ["team:maintainers"],
+  "packageRules": [
+    {
+      "description": "Group npm patch updates",
+      "matchPackageManagers": ["npm"],
+      "matchUpdateTypes": ["patch"],
+      "groupName": "npm patch updates",
+      "automerge": true,
+      "automergeType": "pr"
+    },
+    {
+      "description": "Group npm minor updates",
+      "matchPackageManagers": ["npm"],
+      "matchUpdateTypes": ["minor"],
+      "groupName": "npm minor updates",
+      "automerge": true,
+      "automergeType": "pr"
+    },
+    {
+      "description": "Group npm major updates separately",
+      "matchPackageManagers": ["npm"],
+      "matchUpdateTypes": ["major"],
+      "groupName": "npm major updates",
+      "labels": ["dependencies", "major-update"]
+    },
+    {
+      "description": "Group pip patch updates",
+      "matchPackageManagers": ["pip_requirements", "pip_setup"],
+      "matchUpdateTypes": ["patch"],
+      "groupName": "pip patch updates",
+      "automerge": true,
+      "automergeType": "pr"
+    },
+    {
+      "description": "Group pip minor updates",
+      "matchPackageManagers": ["pip_requirements", "pip_setup"],
+      "matchUpdateTypes": ["minor"],
+      "groupName": "pip minor updates",
+      "automerge": true,
+      "automergeType": "pr"
+    },
+    {
+      "description": "Group pip major updates separately",
+      "matchPackageManagers": ["pip_requirements", "pip_setup"],
+      "matchUpdateTypes": ["major"],
+      "groupName": "pip major updates",
+      "labels": ["dependencies", "major-update"]
+    },
+    {
+      "description": "Group GitHub Actions patch updates",
+      "matchPackageManagers": ["github-actions"],
+      "matchUpdateTypes": ["patch"],
+      "groupName": "GitHub Actions patch updates",
+      "automerge": true,
+      "automergeType": "pr"
+    },
+    {
+      "description": "Group GitHub Actions minor updates",
+      "matchPackageManagers": ["github-actions"],
+      "matchUpdateTypes": ["minor"],
+      "groupName": "GitHub Actions minor updates"
+    },
+    {
+      "description": "Group GitHub Actions major updates separately",
+      "matchPackageManagers": ["github-actions"],
+      "matchUpdateTypes": ["major"],
+      "groupName": "GitHub Actions major updates",
+      "labels": ["dependencies", "major-update", "github-actions"]
+    },
+    {
+      "description": "Respect Node.js engine requirements",
+      "matchPackageManagers": ["npm"],
+      "matchPackageNames": ["node"],
+      "allowedVersions": ">=20.17.0"
+    },
+    {
+      "description": "Security updates - high priority",
+      "matchUpdateTypes": ["patch"],
+      "matchDatasources": ["npm", "pypi"],
+      "labels": ["security", "high-priority"],
+      "automerge": true
+    }
+  ],
+  "vulnerabilityAlerts": {
+    "enabled": true
+  },
+  "osvVulnerabilityAlerts": true,
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 4am on Monday"]
+  },
+  "prHourlyLimit": 2,
+  "prConcurrentLimit": 10,
+  "branchPrefix": "renovate/",
+  "commitMessagePrefix": "chore(deps): ",
+  "semanticCommits": "enabled",
+  "separateMinorPatch": true,
+  "rangeStrategy": "bump"
+}

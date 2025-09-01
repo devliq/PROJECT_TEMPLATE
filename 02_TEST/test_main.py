@@ -10,8 +10,8 @@ import os
 import unittest  # noqa: E402
 import logging  # noqa: E402
 from unittest.mock import patch, MagicMock  # noqa: E402
-from src import main  # noqa: E402
-from src.main import (  # noqa: E402
+from 01_SRC import main  # noqa: E402
+from 01_SRC.main import (  # noqa: E402
     AppConfig,
     ConfigurationError,
     load_configuration,
