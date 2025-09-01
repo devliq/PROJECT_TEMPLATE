@@ -6,16 +6,19 @@ This module contains comprehensive unit tests for all classes and functions
 in the main application.
 """
 
-import unittest
 import sys
-import os
+import unittest
 import logging
 from unittest.mock import patch, MagicMock
-from pathlib import Path
-SRC = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "01_SRC")
-sys.path.insert(0, SRC)
+import os
+sys.path.insert(
+    0,
+    os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        "01_SRC"
+    )
+)
 import main
-
 from main import (
     AppConfig,
     ConfigurationError,
