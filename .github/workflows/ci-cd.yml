@@ -112,7 +112,7 @@ jobs:
         run: npm run lint || (npm run lint:fix && exit 1)
 
       - name: Check Prettier formatting
-        run: npm run format:check || (npm run format && exit 1)
+        run: npm run format:check || (npm run format && echo "❌ Code formatting issues found and fixed. Please commit the changes." && exit 1)
 
       - name: Run TypeScript type checking
         run: npm run typecheck

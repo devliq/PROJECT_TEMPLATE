@@ -9,8 +9,8 @@
  * - Graceful shutdown handling
  */
 
-const path = require("path");
-const fs = require("fs").promises;
+const path = require('path');
+const fs = require('fs').promises;
 
 // =============================================================================
 // LOGGING UTILITIES
@@ -36,26 +36,26 @@ let appConfig = null;
  * @returns {string} Sanitized input
  */
 function sanitizeInput(input, options = {}) {
-  if (typeof input !== "string") {
-    throw new Error("Input must be a string");
+  if (typeof input !== 'string') {
+    throw new Error('Input must be a string');
   }
 
   let sanitized = input.trim();
 
   // Remove null bytes and control characters
   sanitized = [...sanitized]
-    .filter((char) => {
+    .filter(char => {
       const code = char.charCodeAt(0);
       return code >= 32 && code !== 127; // Keep printable characters only
     })
-    .join("");
+    .join('');
 
   // Remove potential script tags (safer version to avoid ReDoS)
-  sanitized = sanitized.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "");
+  sanitized = sanitized.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
 
   // Remove HTML tags if specified
   if (options.stripHtml) {
-    sanitized = sanitized.replace(/<[^>]*>/g, "");
+    sanitized = sanitized.replace(/<[^>]*>/g, '');
   }
 
   // Limit length
@@ -73,7 +73,7 @@ function sanitizeInput(input, options = {}) {
  * @returns {boolean} True if value appears sensitive
  */
 function isSensitiveValue(key, value) {
-  const sensitiveKeys = ["password", "secret", "key", "token", "credential"];
+  const sensitiveKeys = ['password', 'secret', 'key', 'token', 'credential'];
   const sensitivePatterns = [
     /^[a-zA-Z0-9+/=]{10,}$/, // Base64-like
     /^[a-f0-9]{32,}$/i, // Hex hash
@@ -83,21 +83,21 @@ function isSensitiveValue(key, value) {
   const lowerValue = value.toLowerCase();
 
   // Check key name
-  if (sensitiveKeys.some((sensitive) => lowerKey.includes(sensitive))) {
+  if (sensitiveKeys.some(sensitive => lowerKey.includes(sensitive))) {
     return true;
   }
 
   // Check value patterns
-  if (sensitivePatterns.some((pattern) => pattern.test(value))) {
+  if (sensitivePatterns.some(pattern => pattern.test(value))) {
     return true;
   }
 
   // Check for common secret indicators
   if (
-    lowerValue.includes("secret") ||
-    lowerValue.includes("password") ||
-    lowerValue.includes("token") ||
-    lowerValue.includes("key")
+    lowerValue.includes('secret') ||
+    lowerValue.includes('password') ||
+    lowerValue.includes('token') ||
+    lowerValue.includes('key')
   ) {
     return true;
   }
@@ -132,7 +132,7 @@ class RateLimiter {
     const userRequests = this.requests.get(identifier);
 
     // Remove old requests outside the window
-    const validRequests = userRequests.filter((time) => time > windowStart);
+    const validRequests = userRequests.filter(time => time > windowStart);
     this.requests.set(identifier, validRequests);
 
     if (validRequests.length >= this.maxRequests) {
@@ -158,7 +158,7 @@ class RateLimiter {
     }
 
     const userRequests = this.requests.get(identifier);
-    const validRequests = userRequests.filter((time) => time > windowStart);
+    const validRequests = userRequests.filter(time => time > windowStart);
 
     return Math.max(0, this.maxRequests - validRequests.length);
   }
@@ -177,20 +177,20 @@ const rateLimiter = new RateLimiter();
  */
 async function loadConfiguration() {
   // Resolve the .env file path relative to the project root
-  const envPath = path.resolve(__dirname, "../06_CONFIG/.env");
+  const envPath = path.resolve(__dirname, '../06_CONFIG/.env');
 
   // Check if .env file exists
   try {
     await fs.access(envPath);
   } catch {
-    logger.warn(".env file not found. Using default configuration.");
+    logger.warn('.env file not found. Using default configuration.');
     return getDefaultConfig();
   }
 
   // Load environment variables with error handling
   let dotenvConfig;
   try {
-    dotenvConfig = require("dotenv").config({ path: envPath });
+    dotenvConfig = require('dotenv').config({ path: envPath });
     if (dotenvConfig.error) {
       throw dotenvConfig.error;
     }
@@ -200,20 +200,22 @@ async function loadConfiguration() {
 
   try {
     // Validate and parse environment variables
-    const appName = process.env.APP_NAME ?? "Project Template";
-    if (typeof appName !== "string" || appName.trim().length === 0) {
-      throw new Error("APP_NAME must be a non-empty string");
+    const appName = process.env.APP_NAME ?? 'Project Template';
+    if (typeof appName !== 'string' || appName.trim().length === 0) {
+      throw new Error('APP_NAME must be a non-empty string');
     }
 
-    const appVersion = process.env.APP_VERSION || "1.0.0";
+    const appVersion = process.env.APP_VERSION || '1.0.0';
     if (!/^\d+\.\d+\.\d+$/.test(appVersion)) {
-      throw new Error("APP_VERSION must be in semantic version format (e.g., 1.0.0)");
+      throw new Error(
+        'APP_VERSION must be in semantic version format (e.g., 1.0.0)'
+      );
     }
 
-    const environment = process.env.NODE_ENV || "development";
-    const validEnvs = ["development", "production", "test"];
+    const environment = process.env.NODE_ENV || 'development';
+    const validEnvs = ['development', 'production', 'test'];
     if (!validEnvs.includes(environment)) {
-      throw new Error(`NODE_ENV must be one of: ${validEnvs.join(", ")}`);
+      throw new Error(`NODE_ENV must be one of: ${validEnvs.join(', ')}`);
     }
 
     const portStr = process.env.PORT;
@@ -221,12 +223,12 @@ async function loadConfiguration() {
     if (portStr) {
       const parsedPort = parseInt(portStr, 10);
       if (isNaN(parsedPort) || parsedPort < 1 || parsedPort > 65535) {
-        throw new Error("PORT must be a valid number between 1 and 65535");
+        throw new Error('PORT must be a valid number between 1 and 65535');
       }
       port = parsedPort;
     }
 
-    const debug = process.env.DEBUG === "true";
+    const debug = process.env.DEBUG === 'true';
 
     const config = {
       appName: appName.trim(),
@@ -239,14 +241,18 @@ async function loadConfiguration() {
     // Check for sensitive information in configuration
     for (const [key, value] of Object.entries(process.env)) {
       if (isSensitiveValue(key, value)) {
-        logger.warn(`⚠️  Potential sensitive information detected in environment variable: ${key}`);
-        logger.warn("Consider using secure vaults or encrypted storage for sensitive data.");
+        logger.warn(
+          `⚠️  Potential sensitive information detected in environment variable: ${key}`
+        );
+        logger.warn(
+          'Consider using secure vaults or encrypted storage for sensitive data.'
+        );
       }
     }
 
     return config;
   } catch (error) {
-    logger.error("Failed to load configuration:", error.message);
+    logger.error('Failed to load configuration:', error.message);
     return getDefaultConfig();
   }
 }
@@ -257,9 +263,9 @@ async function loadConfiguration() {
  */
 function getDefaultConfig() {
   return {
-    appName: "Project Template",
-    appVersion: "1.0.0",
-    environment: "development",
+    appName: 'Project Template',
+    appVersion: '1.0.0',
+    environment: 'development',
     port: 3000,
     debug: false,
   };
@@ -276,26 +282,28 @@ function getDefaultConfig() {
  * @returns {string} Formatted greeting message
  * @throws {Error} If name validation fails
  */
-function greet(name, appName = "Project Template") {
+function greet(name, appName = 'Project Template') {
   // Input validation
-  if (typeof name !== "string") {
-    throw new Error("Name must be a non-empty string");
+  if (typeof name !== 'string') {
+    throw new Error('Name must be a non-empty string');
   }
 
   const trimmedName = name.trim();
   if (trimmedName.length === 0) {
-    throw new Error("Name cannot be empty after trimming whitespace");
+    throw new Error('Name cannot be empty after trimming whitespace');
   }
 
   // Rate limiting check
-  const identifier = "greet_function"; // In a real app, use IP or user ID
+  const identifier = 'greet_function'; // In a real app, use IP or user ID
   if (!rateLimiter.isAllowed(identifier)) {
-    throw new Error("Rate limit exceeded. Please try again later.");
+    throw new Error('Rate limit exceeded. Please try again later.');
   }
 
   // Length validation
   if (trimmedName.length < 1 || trimmedName.length > 50) {
-    throw new Error(`Name must be between 1 and 50 characters (received ${trimmedName.length})`);
+    throw new Error(
+      `Name must be between 1 and 50 characters (received ${trimmedName.length})`
+    );
   }
 
   // Input sanitization
@@ -303,7 +311,9 @@ function greet(name, appName = "Project Template") {
 
   // Character validation - only allow letters, spaces, hyphens, and apostrophes
   if (!/^[a-zA-Z\s\-']+$/.test(sanitizedName)) {
-    throw new Error("Name can only contain letters, spaces, hyphens, and apostrophes");
+    throw new Error(
+      'Name can only contain letters, spaces, hyphens, and apostrophes'
+    );
   }
 
   return `Hello, ${sanitizedName}! Welcome to ${appName}`;
@@ -315,7 +325,7 @@ function greet(name, appName = "Project Template") {
  */
 function getAppInfo() {
   if (!appConfig) {
-    throw new Error("Application not initialized. Call initialize() first.");
+    throw new Error('Application not initialized. Call initialize() first.');
   }
 
   return {
@@ -335,11 +345,11 @@ function getAppInfo() {
  */
 function logStartupInfo() {
   if (!appConfig) {
-    logger.warn("Cannot log startup info: configuration not loaded");
+    logger.warn('Cannot log startup info: configuration not loaded');
     return;
   }
 
-  logger.info("🚀 Starting Node.js application...");
+  logger.info('🚀 Starting Node.js application...');
   logger.info(`📱 App: ${appConfig.appName} v${appConfig.appVersion}`);
   logger.info(`🌍 Environment: ${appConfig.environment}`);
   logger.info(`🔧 Node.js: ${process.version}`);
@@ -347,7 +357,7 @@ function logStartupInfo() {
   logger.info(`🚪 Port: ${appConfig.port}`);
 
   if (appConfig.debug) {
-    logger.debug("🐛 Debug mode enabled");
+    logger.debug('🐛 Debug mode enabled');
   }
 }
 
@@ -368,18 +378,18 @@ async function initialize() {
     logStartupInfo();
 
     // Demonstrate core functionality
-    logger.info("\n📝 Example Usage:");
-    logger.info(greet("Developer", appConfig.appName));
-    logger.info(greet("World", appConfig.appName));
+    logger.info('\n📝 Example Usage:');
+    logger.info(greet('Developer', appConfig.appName));
+    logger.info(greet('World', appConfig.appName));
 
     // Display comprehensive app information
     const appInfo = getAppInfo();
-    logger.info("\n📊 Application Info:");
+    logger.info('\n📊 Application Info:');
     logger.info(JSON.stringify(appInfo, null, 2));
 
-    logger.info("\n✅ Application initialized successfully!");
+    logger.info('\n✅ Application initialized successfully!');
   } catch (error) {
-    logger.error("❌ Application initialization failed:", error.message);
+    logger.error('❌ Application initialization failed:', error.message);
     process.exit(1);
   }
 }
@@ -388,13 +398,13 @@ async function initialize() {
  * Graceful shutdown handler
  */
 function gracefulShutdown() {
-  logger.info("Received shutdown signal. Cleaning up...");
+  logger.info('Received shutdown signal. Cleaning up...');
 
   // Perform cleanup operations
   const cleanupPromises = [];
 
   // Example: Clear any timers
-  if (global.gc && typeof global.gc === "function") {
+  if (global.gc && typeof global.gc === 'function') {
     // Force garbage collection if available (not recommended in production)
     global.gc();
   }
@@ -403,22 +413,22 @@ function gracefulShutdown() {
   // In a real app, close database connections, HTTP servers, etc.
   // For now, simulate async cleanup
   cleanupPromises.push(
-    new Promise((resolve) => {
+    new Promise(resolve => {
       setTimeout(() => {
-        logger.info("Simulated cleanup of resources completed");
+        logger.info('Simulated cleanup of resources completed');
         resolve();
       }, 100);
-    }),
+    })
   );
 
   // Wait for all cleanup to complete
   Promise.all(cleanupPromises)
     .then(() => {
-      logger.info("Cleanup completed. Exiting...");
+      logger.info('Cleanup completed. Exiting...');
       process.exit(0);
     })
-    .catch((error) => {
-      logger.error("Error during cleanup:", error);
+    .catch(error => {
+      logger.error('Error during cleanup:', error);
       process.exit(1);
     });
 }
@@ -428,25 +438,25 @@ function gracefulShutdown() {
 // =============================================================================
 
 // Handle uncaught exceptions
-process.on("uncaughtException", (error) => {
-  logger.error("Uncaught Exception:", error);
+process.on('uncaughtException', error => {
+  logger.error('Uncaught Exception:', error);
   process.exit(1);
 });
 
 // Handle unhandled promise rejections
-process.on("unhandledRejection", (reason, promise) => {
-  logger.error("Unhandled Rejection at:", promise, "reason:", reason);
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
   process.exit(1);
 });
 
 // Handle shutdown signals
-process.on("SIGINT", gracefulShutdown);
-process.on("SIGTERM", gracefulShutdown);
+process.on('SIGINT', gracefulShutdown);
+process.on('SIGTERM', gracefulShutdown);
 
 // Start the application
 if (require.main === module) {
-  initialize().catch((error) => {
-    logger.error("Failed to start application:", error);
+  initialize().catch(error => {
+    logger.error('Failed to start application:', error);
     process.exit(1);
   });
 }

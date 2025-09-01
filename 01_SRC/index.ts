@@ -10,37 +10,37 @@
  * - Graceful shutdown handling
  */
 
-import * as path from "path";
-import * as fs from "fs/promises";
-import * as dotenv from "dotenv";
+import * as path from 'path';
+import * as fs from 'fs/promises';
+import * as dotenv from 'dotenv';
 
 /**
  * Sanitize user input to prevent injection attacks
  */
 function sanitizeInput(
   input: string,
-  options: { maxLength?: number; stripHtml?: boolean } = {},
+  options: { maxLength?: number; stripHtml?: boolean } = {}
 ): string {
-  if (typeof input !== "string") {
-    throw new Error("Input must be a string");
+  if (typeof input !== 'string') {
+    throw new Error('Input must be a string');
   }
 
   let sanitized = input.trim();
 
   // Remove null bytes and control characters
   sanitized = [...sanitized]
-    .filter((char) => {
+    .filter(char => {
       const code = char.charCodeAt(0);
       return code >= 32 && code !== 127; // Keep printable characters only
     })
-    .join("");
+    .join('');
 
   // Remove potential script tags (safer version to avoid ReDoS)
-  sanitized = sanitized.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "");
+  sanitized = sanitized.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
 
   // Remove HTML tags if specified
   if (options.stripHtml) {
-    sanitized = sanitized.replace(/<[^>]*>/g, "");
+    sanitized = sanitized.replace(/<[^>]*>/g, '');
   }
 
   // Limit length
@@ -55,7 +55,7 @@ function sanitizeInput(
  * Check if a configuration value appears to contain sensitive information
  */
 function isSensitiveValue(key: string, value: string): boolean {
-  const sensitiveKeys = ["password", "secret", "key", "token", "credential"];
+  const sensitiveKeys = ['password', 'secret', 'key', 'token', 'credential'];
   const sensitivePatterns = [
     /^[a-zA-Z0-9+/=]{10,}$/, // Base64-like
     /^[a-f0-9]{32,}$/i, // Hex hash
@@ -65,21 +65,21 @@ function isSensitiveValue(key: string, value: string): boolean {
   const lowerValue = value.toLowerCase();
 
   // Check key name
-  if (sensitiveKeys.some((sensitive) => lowerKey.includes(sensitive))) {
+  if (sensitiveKeys.some(sensitive => lowerKey.includes(sensitive))) {
     return true;
   }
 
   // Check value patterns
-  if (sensitivePatterns.some((pattern) => pattern.test(value))) {
+  if (sensitivePatterns.some(pattern => pattern.test(value))) {
     return true;
   }
 
   // Check for common secret indicators
   if (
-    lowerValue.includes("secret") ||
-    lowerValue.includes("password") ||
-    lowerValue.includes("token") ||
-    lowerValue.includes("key")
+    lowerValue.includes('secret') ||
+    lowerValue.includes('password') ||
+    lowerValue.includes('token') ||
+    lowerValue.includes('key')
   ) {
     return true;
   }
@@ -95,7 +95,7 @@ class RateLimiter {
 
   constructor(
     private windowMs: number = 900000,
-    private maxRequests: number = 100,
+    private maxRequests: number = 100
   ) {}
 
   isAllowed(identifier: string): boolean {
@@ -109,7 +109,7 @@ class RateLimiter {
     const userRequests = this.requests.get(identifier)!;
 
     // Remove old requests outside the window
-    const validRequests = userRequests.filter((time) => time > windowStart);
+    const validRequests = userRequests.filter(time => time > windowStart);
     this.requests.set(identifier, validRequests);
 
     if (validRequests.length >= this.maxRequests) {
@@ -130,7 +130,7 @@ class RateLimiter {
     }
 
     const userRequests = this.requests.get(identifier)!;
-    const validRequests = userRequests.filter((time) => time > windowStart);
+    const validRequests = userRequests.filter(time => time > windowStart);
 
     return Math.max(0, this.maxRequests - validRequests.length);
   }
@@ -163,10 +163,10 @@ interface AppInfo {
 class ConfigurationError extends Error {
   constructor(
     message: string,
-    public readonly cause?: Error,
+    public readonly cause?: Error
   ) {
     super(message);
-    this.name = "ConfigurationError";
+    this.name = 'ConfigurationError';
     // Use the cause parameter to avoid ESLint warning
     if (cause) {
       this.cause = cause;
@@ -177,10 +177,10 @@ class ConfigurationError extends Error {
 class ValidationError extends Error {
   constructor(
     message: string,
-    public readonly field: string,
+    public readonly field: string
   ) {
     super(message);
-    this.name = "ValidationError";
+    this.name = 'ValidationError';
     // Use the field parameter to avoid ESLint warning
     this.field = field;
   }
@@ -222,13 +222,13 @@ class Logger {
 async function loadConfiguration(): Promise<AppConfig> {
   try {
     // Resolve the .env file path relative to the project root
-    const envPath = path.resolve(__dirname, "../06_CONFIG/.env");
+    const envPath = path.resolve(__dirname, '../06_CONFIG/.env');
 
     // Check if .env file exists
     try {
       await fs.access(envPath);
     } catch {
-      console.warn("⚠️  .env file not found. Using default configuration.");
+      console.warn('⚠️  .env file not found. Using default configuration.');
       return getDefaultConfig();
     }
 
@@ -239,11 +239,11 @@ async function loadConfiguration(): Promise<AppConfig> {
     }
 
     const config: AppConfig = {
-      appName: process.env.APP_NAME ?? "Project Template",
-      appVersion: process.env.APP_VERSION || "1.0.0",
-      environment: process.env.NODE_ENV || "development",
-      port: parseInt(process.env.PORT || "3000", 10),
-      debug: process.env.DEBUG === "true",
+      appName: process.env.APP_NAME ?? 'Project Template',
+      appVersion: process.env.APP_VERSION || '1.0.0',
+      environment: process.env.NODE_ENV || 'development',
+      port: parseInt(process.env.PORT || '3000', 10),
+      debug: process.env.DEBUG === 'true',
     };
 
     // Validate configuration
@@ -253,9 +253,11 @@ async function loadConfiguration(): Promise<AppConfig> {
     for (const [key, value] of Object.entries(process.env)) {
       if (value && isSensitiveValue(key, value)) {
         console.warn(
-          `⚠️  Potential sensitive information detected in environment variable: ${key}`,
+          `⚠️  Potential sensitive information detected in environment variable: ${key}`
         );
-        console.warn("Consider using secure vaults or encrypted storage for sensitive data.");
+        console.warn(
+          'Consider using secure vaults or encrypted storage for sensitive data.'
+        );
       }
     }
 
@@ -268,7 +270,7 @@ async function loadConfiguration(): Promise<AppConfig> {
     } else {
       throw new ConfigurationError(
         `Failed to load configuration: ${(error as Error).message}`,
-        error as Error,
+        error as Error
       );
     }
   }
@@ -281,23 +283,29 @@ async function loadConfiguration(): Promise<AppConfig> {
  */
 function validateConfig(config: AppConfig): void {
   if (!config.appName.trim()) {
-    throw new ValidationError("App name cannot be empty", "appName");
+    throw new ValidationError('App name cannot be empty', 'appName');
   }
 
   if (isNaN(config.port) || config.port < 1 || config.port > 65535) {
-    throw new ValidationError("Port must be a valid number between 1 and 65535", "port");
+    throw new ValidationError(
+      'Port must be a valid number between 1 and 65535',
+      'port'
+    );
   }
 
-  const validEnvironments = ["development", "staging", "production", "test"];
+  const validEnvironments = ['development', 'staging', 'production', 'test'];
   if (!validEnvironments.includes(config.environment)) {
     throw new ValidationError(
-      `Environment must be one of: ${validEnvironments.join(", ")}`,
-      "environment",
+      `Environment must be one of: ${validEnvironments.join(', ')}`,
+      'environment'
     );
   }
 
   if (!/^\d+\.\d+\.\d+$/.test(config.appVersion)) {
-    throw new ValidationError("Version must be in semantic format (e.g., 1.0.0)", "appVersion");
+    throw new ValidationError(
+      'Version must be in semantic format (e.g., 1.0.0)',
+      'appVersion'
+    );
   }
 }
 
@@ -307,9 +315,9 @@ function validateConfig(config: AppConfig): void {
  */
 function getDefaultConfig(): AppConfig {
   return {
-    appName: "Project Template",
-    appVersion: "1.0.0",
-    environment: "development",
+    appName: 'Project Template',
+    appVersion: '1.0.0',
+    environment: 'development',
     port: 3000,
     debug: false,
   };
@@ -325,14 +333,14 @@ function getDefaultConfig(): AppConfig {
 class GreetingService {
   constructor(
     private config: AppConfig,
-    private logger: Logger,
+    private logger: Logger
   ) {
     // Validate config on initialization
     if (!config) {
-      throw new Error("Configuration is required for GreetingService");
+      throw new Error('Configuration is required for GreetingService');
     }
     if (!logger) {
-      throw new Error("Logger is required for GreetingService");
+      throw new Error('Logger is required for GreetingService');
     }
   }
 
@@ -344,24 +352,30 @@ class GreetingService {
    */
   public greet(name: string): string {
     // Input validation
-    if (typeof name !== "string") {
-      throw new ValidationError("Name must be a non-empty string", "name");
+    if (typeof name !== 'string') {
+      throw new ValidationError('Name must be a non-empty string', 'name');
     }
 
     const trimmedName = name.trim();
     if (!trimmedName) {
-      throw new ValidationError("Name cannot be empty after trimming", "name");
+      throw new ValidationError('Name cannot be empty after trimming', 'name');
     }
 
     // Rate limiting check
-    const identifier = "greet_function"; // In a real app, use IP or user ID
+    const identifier = 'greet_function'; // In a real app, use IP or user ID
     if (!rateLimiter.isAllowed(identifier)) {
-      throw new ValidationError("Rate limit exceeded. Please try again later.", "name");
+      throw new ValidationError(
+        'Rate limit exceeded. Please try again later.',
+        'name'
+      );
     }
 
     // Length validation
     if (trimmedName.length < 1 || trimmedName.length > 50) {
-      throw new ValidationError("Name must be between 1 and 50 characters", "name");
+      throw new ValidationError(
+        'Name must be between 1 and 50 characters',
+        'name'
+      );
     }
 
     // Input sanitization
@@ -382,7 +396,7 @@ class GreetingService {
    * @returns Array of greeting messages
    */
   public getMultipleGreetings(names: string[]): string[] {
-    return names.map((name) => this.greet(name));
+    return names.map(name => this.greet(name));
   }
 
   /**
@@ -391,22 +405,28 @@ class GreetingService {
    * @throws ValidationError if validation fails
    */
   private validateName(name: string): void {
-    if (typeof name !== "string") {
-      throw new ValidationError("Name must be a non-empty string", "name");
+    if (typeof name !== 'string') {
+      throw new ValidationError('Name must be a non-empty string', 'name');
     }
 
     if (!name) {
-      throw new ValidationError("Name cannot be empty after sanitization", "name");
+      throw new ValidationError(
+        'Name cannot be empty after sanitization',
+        'name'
+      );
     }
 
     if (name.length < 1 || name.length > 50) {
-      throw new ValidationError("Name must be between 1 and 50 characters", "name");
+      throw new ValidationError(
+        'Name must be between 1 and 50 characters',
+        'name'
+      );
     }
 
     if (!/^[a-zA-Z\s\-']+$/.test(name)) {
       throw new ValidationError(
-        "Name can only contain letters, spaces, hyphens, and apostrophes",
-        "name",
+        'Name can only contain letters, spaces, hyphens, and apostrophes',
+        'name'
       );
     }
   }
@@ -418,14 +438,14 @@ class GreetingService {
 class AppInfoService {
   constructor(
     private config: AppConfig,
-    private logger: Logger,
+    private logger: Logger
   ) {
     // Validate config on initialization
     if (!config) {
-      throw new Error("Configuration is required for AppInfoService");
+      throw new Error('Configuration is required for AppInfoService');
     }
     if (!logger) {
-      throw new Error("Logger is required for AppInfoService");
+      throw new Error('Logger is required for AppInfoService');
     }
   }
 
@@ -462,7 +482,12 @@ class ApplicationState {
    * Check if all services are properly initialized
    */
   public isInitialized(): boolean {
-    return !!(this.config && this.logger && this.greetingService && this.appInfoService);
+    return !!(
+      this.config &&
+      this.logger &&
+      this.greetingService &&
+      this.appInfoService
+    );
   }
 
   /**
@@ -491,40 +516,48 @@ async function initialize(): Promise<void> {
     appState.logger = new Logger(appState.config.debug);
 
     // Initialize services
-    appState.greetingService = new GreetingService(appState.config, appState.logger);
-    appState.appInfoService = new AppInfoService(appState.config, appState.logger);
+    appState.greetingService = new GreetingService(
+      appState.config,
+      appState.logger
+    );
+    appState.appInfoService = new AppInfoService(
+      appState.config,
+      appState.logger
+    );
 
     // Log startup information
     logStartupInfo();
 
     // Verify all services are initialized
     if (!appState.isInitialized()) {
-      throw new Error("One or more services failed to initialize");
+      throw new Error('One or more services failed to initialize');
     }
 
     // Demonstrate core functionality
-    appState.logger.info("\n📝 Example Usage:");
-    appState.logger.info(appState.greetingService.greet("Developer"));
-    appState.logger.info(appState.greetingService.greet("TypeScript User"));
+    appState.logger.info('\n📝 Example Usage:');
+    appState.logger.info(appState.greetingService.greet('Developer'));
+    appState.logger.info(appState.greetingService.greet('TypeScript User'));
 
     // Multiple greetings example
-    const names = ["Alice", "Bob", "Charlie"];
+    const names = ['Alice', 'Bob', 'Charlie'];
     const greetings = appState.greetingService.getMultipleGreetings(names);
-    appState.logger.info("\n👥 Multiple Greetings:");
-    greetings.forEach((greeting) => appState.logger!.info(`  ${greeting}`));
+    appState.logger.info('\n👥 Multiple Greetings:');
+    greetings.forEach(greeting => appState.logger!.info(`  ${greeting}`));
 
     // Display comprehensive app information
     const appInfo = appState.appInfoService.getAppInfo();
-    appState.logger.info("\n📊 Application Info:");
+    appState.logger.info('\n📊 Application Info:');
     Object.entries(appInfo).forEach(([key, value]) => {
       appState.logger!.info(`  ${key}: ${value}`);
     });
 
-    appState.logger.info("\n✅ Application initialized successfully!");
+    appState.logger.info('\n✅ Application initialized successfully!');
   } catch (error) {
     if (appState.logger) {
       if (error instanceof ValidationError) {
-        appState.logger.error(`❌ Validation Error [${error.field}]: ${error.message}`);
+        appState.logger.error(
+          `❌ Validation Error [${error.field}]: ${error.message}`
+        );
       } else if (error instanceof ConfigurationError) {
         appState.logger.error(`❌ Configuration Error: ${error.message}`);
       } else {
@@ -537,7 +570,7 @@ async function initialize(): Promise<void> {
       } else if (error instanceof ConfigurationError) {
         console.error(`❌ Configuration Error: ${error.message}`);
       } else {
-        console.error("❌ Application initialization failed:", error);
+        console.error('❌ Application initialization failed:', error);
       }
     }
     process.exit(1);
@@ -549,19 +582,23 @@ async function initialize(): Promise<void> {
  */
 function logStartupInfo(): void {
   if (!appState.config || !appState.logger) {
-    console.warn("⚠️  Cannot log startup info: application not properly initialized");
+    console.warn(
+      '⚠️  Cannot log startup info: application not properly initialized'
+    );
     return;
   }
 
-  appState.logger.info("🚀 Starting TypeScript application...");
-  appState.logger.info(`📱 App: ${appState.config.appName} v${appState.config.appVersion}`);
+  appState.logger.info('🚀 Starting TypeScript application...');
+  appState.logger.info(
+    `📱 App: ${appState.config.appName} v${appState.config.appVersion}`
+  );
   appState.logger.info(`🌍 Environment: ${appState.config.environment}`);
   appState.logger.info(`🔧 Node.js: ${process.version}`);
   appState.logger.info(`📂 Platform: ${process.platform}`);
   appState.logger.info(`🚪 Port: ${appState.config.port}`);
 
   if (appState.config.debug) {
-    appState.logger.debug("🐛 Debug mode enabled");
+    appState.logger.debug('🐛 Debug mode enabled');
   }
 }
 
@@ -570,9 +607,9 @@ function logStartupInfo(): void {
  */
 function gracefulShutdown(): void {
   if (appState.logger) {
-    appState.logger.info("\n🛑 Received shutdown signal. Cleaning up...");
+    appState.logger.info('\n🛑 Received shutdown signal. Cleaning up...');
   } else {
-    console.log("\n🛑 Received shutdown signal. Cleaning up...");
+    console.log('\n🛑 Received shutdown signal. Cleaning up...');
   }
 
   // Perform cleanup operations
@@ -582,9 +619,9 @@ function gracefulShutdown(): void {
   appState.reset();
 
   if (appState.logger) {
-    appState.logger.info("✅ Cleanup completed. Exiting...");
+    appState.logger.info('✅ Cleanup completed. Exiting...');
   } else {
-    console.log("✅ Cleanup completed. Exiting...");
+    console.log('✅ Cleanup completed. Exiting...');
   }
   process.exit(0);
 }
@@ -594,28 +631,33 @@ function gracefulShutdown(): void {
 // =============================================================================
 
 // Handle uncaught exceptions
-process.on("uncaughtException", (error: Error) => {
+process.on('uncaughtException', (error: Error) => {
   if (appState.logger) {
     appState.logger.error(`💥 Uncaught Exception: ${error.message}`);
   } else {
-    console.error("💥 Uncaught Exception:", error.message);
+    console.error('💥 Uncaught Exception:', error.message);
   }
   process.exit(1);
 });
 
 // Handle unhandled promise rejections
-process.on("unhandledRejection", (reason: unknown, promise: Promise<unknown>) => {
-  if (appState.logger) {
-    appState.logger.error(`💥 Unhandled Rejection at: ${promise}, reason: ${reason}`);
-  } else {
-    console.error("💥 Unhandled Rejection at:", promise, "reason:", reason);
+process.on(
+  'unhandledRejection',
+  (reason: unknown, promise: Promise<unknown>) => {
+    if (appState.logger) {
+      appState.logger.error(
+        `💥 Unhandled Rejection at: ${promise}, reason: ${reason}`
+      );
+    } else {
+      console.error('💥 Unhandled Rejection at:', promise, 'reason:', reason);
+    }
+    process.exit(1);
   }
-  process.exit(1);
-});
+);
 
 // Handle shutdown signals
-process.on("SIGINT", gracefulShutdown);
-process.on("SIGTERM", gracefulShutdown);
+process.on('SIGINT', gracefulShutdown);
+process.on('SIGTERM', gracefulShutdown);
 
 // Start the application
 if (require.main === module) {
@@ -623,7 +665,7 @@ if (require.main === module) {
     if (appState.logger) {
       appState.logger.error(`💥 Failed to start application: ${error.message}`);
     } else {
-      console.error("💥 Failed to start application:", error.message);
+      console.error('💥 Failed to start application:', error.message);
     }
     process.exit(1);
   });
