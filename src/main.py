@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import Dict, Any, Optional
 from dataclasses import dataclass
 import traceback
+
 try:
     import typer
 except ImportError:

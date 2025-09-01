@@ -84,7 +84,7 @@ class TestConfiguration(unittest.TestCase):
 
     @patch("main.Path.exists", return_value=True)
     @patch.object(
-        main, 'load_dotenv', side_effect=ImportError("No module named 'dotenv'")
+        main, "load_dotenv", side_effect=ImportError("No module named 'dotenv'")
     )
     @patch.dict(
         os.environ,
@@ -190,8 +190,18 @@ class TestConfiguration(unittest.TestCase):
     def test_validate_config_invalid_semantic_version(self):
         """Test validating configuration with invalid semantic version."""
         invalid_versions = [
-            "1", "1.0.0.0", "1.0.0-beta", "v1.0.0", "1.0.0a", "abc",
-            "1.2.3.4.5", "1..0", "1.0.", ".1.0", "1.0.0.0.0", "version1.0"
+            "1",
+            "1.0.0.0",
+            "1.0.0-beta",
+            "v1.0.0",
+            "1.0.0a",
+            "abc",
+            "1.2.3.4.5",
+            "1..0",
+            "1.0.",
+            ".1.0",
+            "1.0.0.0.0",
+            "version1.0",
         ]
         for version in invalid_versions:
             with self.subTest(version=version):
@@ -431,7 +441,7 @@ class TestIntegration(unittest.TestCase):
         mock_get_logger.return_value = mock_logger
 
         # Mock the typer app
-        with patch.object(main, 'app') as mock_app:
+        with patch.object(main, "app") as mock_app:
             # Call the typer app (this would normally be called by typer)
             mock_app()
 
@@ -468,7 +478,7 @@ class TestIntegration(unittest.TestCase):
 
                         # Import and call main_fallback
                         with patch.object(
-                            logging.getLogger("src.main"), 'info'
+                            logging.getLogger("src.main"), "info"
                         ) as mock_info:
                             main.main_fallback()
 
@@ -546,10 +556,10 @@ class TestIntegration(unittest.TestCase):
 
                     # Simulate KeyboardInterrupt during main execution
                     with patch.object(
-                        main, 'load_configuration', side_effect=KeyboardInterrupt
+                        main, "load_configuration", side_effect=KeyboardInterrupt
                     ):
                         with patch.object(
-                            logging.getLogger("src.main"), 'info'
+                            logging.getLogger("src.main"), "info"
                         ) as mock_info:
                             main.main_fallback()
 
