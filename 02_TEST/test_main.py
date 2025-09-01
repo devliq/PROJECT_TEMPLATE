@@ -6,7 +6,6 @@ This module contains comprehensive unit tests for all classes and functions
 in the main application.
 """
 
-import sys
 import os
 import unittest  # noqa: E402
 import logging  # noqa: E402
@@ -26,7 +25,6 @@ from src.main import (  # noqa: E402
     sanitize_input,
     is_sensitive_value,
 )
-
 
 
 class TestAppConfig(unittest.TestCase):
