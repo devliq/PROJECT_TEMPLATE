@@ -11,8 +11,8 @@ import os
 import unittest  # noqa: E402
 import logging  # noqa: E402
 from unittest.mock import patch, MagicMock  # noqa: E402
-import main  # noqa: E402
-from main import (  # noqa: E402
+from src import main  # noqa: E402
+from src.main import (  # noqa: E402
     AppConfig,
     ConfigurationError,
     load_configuration,
@@ -27,7 +27,6 @@ from main import (  # noqa: E402
     is_sensitive_value,
 )
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 
 class TestAppConfig(unittest.TestCase):
