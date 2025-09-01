@@ -12,10 +12,6 @@ import os
 import logging
 from unittest.mock import patch, MagicMock
 from pathlib import Path
-
-# Import main module for testing
-SRC = Path(__file__).parent.parent / "01_SRC"
-sys.path.insert(0, str(SRC))
 import main
 
 from main import (
@@ -31,8 +27,12 @@ from main import (
     demonstrate_features,
     sanitize_input,
     is_sensitive_value,
-    main,
 )
+
+SRC = Path(__file__).parent.parent / "01_SRC"
+sys.path.insert(0, str(SRC))
+
+# Import main module for testing
 
 
 class TestAppConfig(unittest.TestCase):
