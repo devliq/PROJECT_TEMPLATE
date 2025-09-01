@@ -82,6 +82,7 @@ jobs:
             sudo ls -t app.backup.* | tail -n +4 | xargs sudo rm -rf || true
 
       - name: Run smoke tests
+        if: success()
         run: |
           sleep 10
           curl -f ${{ secrets.STAGING_URL }}/health
@@ -141,6 +142,7 @@ jobs:
         run: npm ci --production
 
       - name: Build application
+        if: success()
         run: npm run build
         env:
           NODE_ENV: production
@@ -207,6 +209,7 @@ jobs:
             fi
 
       - name: Run production smoke tests
+        if: success()
         run: |
           sleep 30
           curl -f ${{ secrets.PRODUCTION_URL }}/health
