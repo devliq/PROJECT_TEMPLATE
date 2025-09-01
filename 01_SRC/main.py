@@ -235,7 +235,7 @@ def load_configuration() -> AppConfig:
                     key,
                 )
                 logging.warning(
-                    "Consider using secure vaults or encrypted storage for sensitive data."
+                    "Use secure vaults or encrypted storage for sensitive data."
                 )
 
         return config

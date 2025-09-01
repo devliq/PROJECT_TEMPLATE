@@ -18,7 +18,6 @@ SRC = Path(__file__).parent.parent / "01_SRC"
 sys.path.insert(0, str(SRC))
 import main
 
-sys.modules["main"] = main
 from main import (
     AppConfig,
     ConfigurationError,
@@ -32,8 +31,8 @@ from main import (
     demonstrate_features,
     sanitize_input,
     is_sensitive_value,
+    main,
 )
-from main import main
 
 
 class TestAppConfig(unittest.TestCase):
