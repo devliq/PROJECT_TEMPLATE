@@ -124,7 +124,7 @@ pkgs.mkShell {
   '';
 
   # Additional environment setup
-  PYTHONPATH = "$PROJECT_ROOT/01_SRC";
+  PYTHONPATH = "$PROJECT_ROOT/src";
 
   # Git configuration (optional)
   GIT_CONFIG_GLOBAL = pkgs.writeText "gitconfig" ''

@@ -634,26 +634,26 @@ src/**/*.log
 # Test temp files
 test/**/*.tmp
 # Build artifacts
-03_BUILD/**
+build/**
 # Deploy logs
-04_DEPLOY/**/*.log
+deploy/**/*.log
 # Assets cache
-05_ASSETS/cache/
+assets/cache/
 # Config secrets
-06_CONFIG/**/*.secret
+config/**/*.secret
 # Scripts logs
-07_SCRIPT/**/*.log
+scripts/**/*.log
 # Docs build
-00_DOCS/_build/
+docs/_build/
 # Terraform state
-04_DEPLOY/terraform/.terraform/
+deploy/terraform/.terraform/
 # Grafana temp
-06_CONFIG/grafana/dashboards/*.tmp
+config/grafana/dashboards/*.tmp
 # Prometheus temp
-06_CONFIG/prometheus/*.tmp
+config/prometheus/*.tmp
 # Loki temp
-06_CONFIG/loki-config.yaml.tmp
+config/loki-config.yaml.tmp
 # Promtail temp
-06_CONFIG/promtail-config.yaml.tmp
+config/promtail-config.yaml.tmp
 # Alerting temp
-06_CONFIG/alerting_rules.yml.tmp
+config/alerting_rules.yml.tmp

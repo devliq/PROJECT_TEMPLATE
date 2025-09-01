@@ -4,9 +4,9 @@
 .PHONY: help install build test clean deploy setup lint format docker-build docker-run validate
 
 # Configurable paths
-SCRIPT_DIR = 07_SCRIPT
-BUILD_DIR = 03_BUILD
-DEPLOY_DIR = 04_DEPLOY
+SCRIPT_DIR = scripts
+BUILD_DIR = build
+DEPLOY_DIR = deploy
 SRC_DIR = src
 TEST_DIR = test
 
@@ -108,8 +108,8 @@ deploy: ## Deploy to staging
 
 deploy-prod: ## Deploy to production
 	@echo "Deploying to production..."
-	@if [ -f "07_SCRIPT/deploy/deploy.sh" ]; then \
-		bash 07_SCRIPT/deploy/deploy.sh production; \
+	@if [ -f "scripts/deploy/deploy.sh" ]; then \
+		bash scripts/deploy/deploy.sh production; \
 	else \
 		echo "Deploy script not found"; \
 	fi
@@ -117,16 +117,16 @@ deploy-prod: ## Deploy to production
 # GitOps deployment
 gitops-deploy: ## GitOps deploy to staging
 	@echo "GitOps deploying to staging..."
-	@if [ -f "07_SCRIPT/deploy/gitops-deploy.sh" ]; then \
-		bash 07_SCRIPT/deploy/gitops-deploy.sh staging; \
+	@if [ -f "scripts/deploy/gitops-deploy.sh" ]; then \
+		bash scripts/deploy/gitops-deploy.sh staging; \
 	else \
 		echo "GitOps deploy script not found"; \
 	fi
 
 gitops-deploy-prod: ## GitOps deploy to production
 	@echo "GitOps deploying to production..."
-	@if [ -f "07_SCRIPT/deploy/gitops-deploy.sh" ]; then \
-		bash 07_SCRIPT/deploy/gitops-deploy.sh production; \
+	@if [ -f "scripts/deploy/gitops-deploy.sh" ]; then \
+		bash scripts/deploy/gitops-deploy.sh production; \
 	else \
 		echo "GitOps deploy script not found"; \
 	fi

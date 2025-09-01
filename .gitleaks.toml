@@ -3,7 +3,7 @@ title = "gitleaks config"
 # Exclude documentation files from secret scanning
 [allowlist]
 paths = [
-    '''00_DOCS/.*''',
+    '''docs/.*''',
     '''.*\.md$''',
     '''node_modules/.*''',
     '''\.git/.*'''
@@ -22,7 +22,7 @@ entropy = 3.5
 id = "jwt-example"
 description = "JWT example tokens in documentation"
 regex = '''eyJhbGciOiJIUzI1NiIs\.\.\.'''
-path = '''00_DOCS/.*'''
+path = '''docs/.*'''
 allow = true
 
 # Allow test JWT tokens

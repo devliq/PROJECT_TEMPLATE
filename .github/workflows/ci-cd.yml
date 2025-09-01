@@ -121,10 +121,10 @@ jobs:
 
       # Python Quality Checks
       - name: Run Flake8 linting
-        run: flake8 01_SRC/ 02_TEST/ --max-line-length=88 --extend-ignore=E203,W503
+        run: flake8 src/ tests/ --max-line-length=88 --extend-ignore=E203,W503
 
       - name: Run Black formatting check
-        run: black --check --diff 01_SRC/ 02_TEST/
+        run: black --check --diff src/ tests/
 
   # =============================================================================
   # UNIT TESTING
@@ -191,8 +191,8 @@ jobs:
       # Python Testing
       - name: Run pytest
         run: |
-          cd 02_TEST
-          python -m pytest --cov=../01_SRC --cov-report=xml --cov-report=html
+          cd tests
+          python -m pytest --cov=../src --cov-report=xml --cov-report=html
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
           REDIS_URL: redis://localhost:6379
@@ -200,7 +200,7 @@ jobs:
       - name: Upload Python coverage
         uses: codecov/codecov-action@v4
         with:
-          file: ./02_TEST/coverage.xml
+          file: ./tests/coverage.xml
           flags: python
           fail_ci_if_error: false
 
@@ -212,8 +212,8 @@ jobs:
           name: test-results
           path: |
             coverage/
-            02_TEST/coverage.xml
-            02_TEST/htmlcov/
+            tests/coverage.xml
+            tests/htmlcov/
           retention-days: 30
 
   # =============================================================================
@@ -333,8 +333,8 @@ jobs:
       - name: Create deployment package
         run: |
           mkdir -p deployment
-          cp -r 01_SRC deployment/
-          cp -r 03_BUILD deployment/
+          cp -r src deployment/
+          cp -r build deployment/
           cp package.json requirements.txt deployment/
           tar -czf deployment-${{ github.sha }}.tar.gz deployment/
 

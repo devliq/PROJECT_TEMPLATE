@@ -101,10 +101,10 @@ if (-not $defaultDistro) {
 
 # Prepare WSL commands as single line like batch file
 $distroName = if ($defaultDistro) { $defaultDistro } else { "default" }
-$wslCommands = "cd '$wslDir' && echo '🐧 Welcome to WSL ($distroName)!' && echo '📁 Successfully entered project directory' && echo '🔧 Environment will load automatically via direnv' && echo '' && echo '💡 Available commands:' && echo '  • ./07_SCRIPT/setup-dev-workspace.sh  - Create development workspace' && echo '  • npm run dev                        - Start development server' && echo '  • npm test                          - Run tests' && echo '  • docker compose up -d              - Start services' && echo '' && echo '🎯 Your development environment is ready!' && echo ''"
+$wslCommands = "cd '$wslDir' && echo '🐧 Welcome to WSL ($distroName)!' && echo '📁 Successfully entered project directory' && echo '🔧 Environment will load automatically via direnv' && echo '' && echo '💡 Available commands:' && echo '  • ./scripts/setup-dev-workspace.sh  - Create development workspace' && echo '  • npm run dev                        - Start development server' && echo '  • npm test                          - Run tests' && echo '  • docker compose up -d              - Start services' && echo '' && echo '🎯 Your development environment is ready!' && echo ''"
 
 if (-not $NoWorkspace) {
-    $wslCommands += " && if [ -f './07_SCRIPT/setup-dev-workspace.sh' ]; then echo '🔄 Setting up development workspace...'; ./07_SCRIPT/setup-dev-workspace.sh; else echo '⚠️  Workspace setup script not found. Run manually: ./07_SCRIPT/setup-dev-workspace.sh'; fi"
+    $wslCommands += " && if [ -f './scripts/setup-dev-workspace.sh' ]; then echo '🔄 Setting up development workspace...'; ./scripts/setup-dev-workspace.sh; else echo '⚠️  Workspace setup script not found. Run manually: ./scripts/setup-dev-workspace.sh'; fi"
 }
 
 $wslCommands += " && echo '📂 Returning to project directory...' && cd '$wslDir' && exec bash --rcfile <(echo 'cd '\''$wslDir'\''; source ~/.bashrc')"

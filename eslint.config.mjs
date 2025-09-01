@@ -223,7 +223,7 @@ export default [
     },
   },
   {
-    files: ['07_SCRIPT/load-test.js'],
+    files: ['scripts/load-test.js'],
     languageOptions: {
       globals: {
         __ENV: 'readonly',

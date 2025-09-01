@@ -70,9 +70,9 @@ COPY --from=deps --chown=nodejs:nodejs /app/node_modules ./node_modules
 
 # Copy built application
 COPY --from=builder --chown=nodejs:nodejs /app/src ./src
-COPY --from=builder --chown=nodejs:nodejs /app/03_BUILD ./03_BUILD
-COPY --from=builder --chown=nodejs:nodejs /app/05_ASSETS ./05_ASSETS
-COPY --from=builder --chown=nodejs:nodejs /app/06_CONFIG ./06_CONFIG
+COPY --from=builder --chown=nodejs:nodejs /app/build ./build
+COPY --from=builder --chown=nodejs:nodejs /app/assets ./assets
+COPY --from=builder --chown=nodejs:nodejs /app/config ./config
 
 # Switch to non-root user
 USER nodejs
