@@ -4,7 +4,7 @@ on:
   push:
     branches: [main, master]
   workflow_run:
-    workflows: ["CI"]
+    workflows: ["Comprehensive CI/CD Pipeline"]
     branches: [main, master]
     types:
       - completed
@@ -90,7 +90,7 @@ jobs:
 
       - name: Notify deployment success
         uses: 8398a7/action-slack@v3
-        if: success()
+        if: success() && env.SLACK_WEBHOOK_URL != ''
         continue-on-error: true
         with:
           status: success
@@ -100,7 +100,7 @@ jobs:
 
       - name: Notify deployment failure
         uses: 8398a7/action-slack@v3
-        if: failure()
+        if: failure() && env.SLACK_WEBHOOK_URL != ''
         continue-on-error: true
         with:
           status: failure
@@ -216,7 +216,7 @@ jobs:
 
       - name: Notify production deployment success
         uses: 8398a7/action-slack@v3
-        if: success()
+        if: success() && env.SLACK_WEBHOOK_URL != ''
         continue-on-error: true
         with:
           status: success
@@ -226,7 +226,7 @@ jobs:
 
       - name: Notify production deployment failure
         uses: 8398a7/action-slack@v3
-        if: failure()
+        if: failure() && env.SLACK_WEBHOOK_URL != ''
         continue-on-error: true
         with:
           status: failure

@@ -311,7 +311,9 @@ describe("initialize", () => {
   test("should exit on configuration error", async () => {
     mockFs.promises.access.mockResolvedValue();
     mockPath.resolve.mockReturnValue("/path/to/.env");
-    mockDotenv.config.mockReturnValue({ error: new Error("Dotenv config error") });
+    mockDotenv.config.mockReturnValue({
+      error: new Error("Dotenv config error"),
+    });
 
     await initialize();
 
@@ -377,7 +379,9 @@ describe("Integration Tests", () => {
   test("should handle configuration errors gracefully", async () => {
     mockFs.promises.access.mockResolvedValue();
     mockPath.resolve.mockReturnValue("/path/to/.env");
-    mockDotenv.config.mockReturnValue({ error: new Error("Dotenv config error") });
+    mockDotenv.config.mockReturnValue({
+      error: new Error("Dotenv config error"),
+    });
 
     await initialize();
 

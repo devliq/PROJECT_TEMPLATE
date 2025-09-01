@@ -57,7 +57,10 @@ import {
 
 // Mock process methods
 const mockProcessExit = jest.fn();
-Object.defineProperty(process, "exit", { value: mockProcessExit, writable: true });
+Object.defineProperty(process, "exit", {
+  value: mockProcessExit,
+  writable: true,
+});
 
 // Mock process properties
 Object.defineProperty(process, "version", { value: "v16.0.0", writable: true });
@@ -205,8 +208,14 @@ describe("AppInfoService", () => {
     const mockPlatform = "linux";
 
     jest.spyOn(process, "uptime").mockReturnValue(mockUptime);
-    Object.defineProperty(process, "version", { value: mockVersion, writable: true });
-    Object.defineProperty(process, "platform", { value: mockPlatform, writable: true });
+    Object.defineProperty(process, "version", {
+      value: mockVersion,
+      writable: true,
+    });
+    Object.defineProperty(process, "platform", {
+      value: mockPlatform,
+      writable: true,
+    });
 
     const appInfo = appInfoService.getAppInfo();
     expect(appInfo).toEqual({
