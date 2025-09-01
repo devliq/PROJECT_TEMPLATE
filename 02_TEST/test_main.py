@@ -26,6 +26,7 @@ from main import (  # noqa: E402
     sanitize_input,
     is_sensitive_value,
 )
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 
