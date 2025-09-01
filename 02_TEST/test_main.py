@@ -27,7 +27,7 @@ from main import (  # noqa: E402
     is_sensitive_value,
 )
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 
 class TestAppConfig(unittest.TestCase):
