@@ -26,7 +26,10 @@ from main import (
     GreetingService,
     AppInfoService,
     log_startup_info,
-    demonstrate_features
+    demonstrate_features,
+    sanitize_input,
+    is_sensitive_value,
+    rate_limiter
 )
 from main import main
 
@@ -544,6 +547,79 @@ class TestIntegration(unittest.TestCase):
 
                     mock_logger.info.assert_any_call('\n🛑 Application interrupted by user')
                     mock_exit.assert_called_with(0)
+
+
+class TestSecurityFunctions(unittest.TestCase):
+    """Test cases for security functions."""
+
+    def test_sanitize_input_basic(self):
+        """Test basic input sanitization."""
+        self.assertEqual(sanitize_input("  hello  "), "hello")
+        self.assertEqual(sanitize_input("hello\tworld"), "helloworld")
+        self.assertEqual(sanitize_input("hello\nworld"), "helloworld")
+
+    def test_sanitize_input_script_removal(self):
+        """Test script tag removal."""
+        input_str = "hello<script>alert('xss')</script>world"
+        expected = "helloworld"
+        self.assertEqual(sanitize_input(input_str), expected)
+
+    def test_sanitize_input_html_stripping(self):
+        """Test HTML stripping."""
+        input_str = "<b>hello</b>"
+        expected = "hello"
+        self.assertEqual(sanitize_input(input_str, strip_html=True), expected)
+
+    def test_sanitize_input_length_limit(self):
+        """Test length limiting."""
+        input_str = "verylongstring"
+        expected = "veryl"
+        self.assertEqual(sanitize_input(input_str, max_length=5), expected)
+
+    def test_sanitize_input_non_string(self):
+        """Test non-string input raises error."""
+        with self.assertRaises(ValueError):
+            sanitize_input(123)
+
+    def test_is_sensitive_value_sensitive_keys(self):
+        """Test detection of sensitive keys."""
+        self.assertTrue(is_sensitive_value("DB_PASSWORD", "secret123"))
+        self.assertTrue(is_sensitive_value("API_KEY", "key123"))
+        self.assertTrue(is_sensitive_value("JWT_SECRET", "token"))
+
+    def test_is_sensitive_value_base64(self):
+        """Test detection of base64-like values."""
+        self.assertTrue(is_sensitive_value("SOME_VAR", "SGVsbG8gV29ybGQ="))
+
+    def test_is_sensitive_value_hex(self):
+        """Test detection of hex values."""
+        hex_value = "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3"
+        self.assertTrue(is_sensitive_value("HASH", hex_value))
+
+    def test_is_sensitive_value_normal_values(self):
+        """Test that normal values are not flagged."""
+        self.assertFalse(is_sensitive_value("APP_NAME", "My App"))
+        self.assertFalse(is_sensitive_value("PORT", "3000"))
+
+    def test_rate_limiter_allow_within_limit(self):
+        """Test rate limiter allows requests within limit."""
+        limiter = main.RateLimiter(1000, 2)  # 1 second, 2 requests
+        self.assertTrue(limiter.is_allowed("user1"))
+        self.assertTrue(limiter.is_allowed("user1"))
+
+    def test_rate_limiter_block_over_limit(self):
+        """Test rate limiter blocks requests over limit."""
+        limiter = main.RateLimiter(1000, 2)
+        limiter.is_allowed("user1")
+        limiter.is_allowed("user1")
+        self.assertFalse(limiter.is_allowed("user1"))
+
+    def test_rate_limiter_remaining_requests(self):
+        """Test tracking of remaining requests."""
+        limiter = main.RateLimiter(1000, 3)
+        self.assertEqual(limiter.get_remaining_requests("user1"), 3)
+        limiter.is_allowed("user1")
+        self.assertEqual(limiter.get_remaining_requests("user1"), 2)
 
 
 if __name__ == '__main__':

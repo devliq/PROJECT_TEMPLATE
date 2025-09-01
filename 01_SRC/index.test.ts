@@ -48,7 +48,12 @@ import {
   AppInfoService,
   loadConfiguration,
   initialize,
+  sanitizeInput,
+  isSensitiveValue,
+  RateLimiter,
 } from "./index";
+
+// Import the security functions (they are not exported, so we need to test them indirectly or export them)
 
 // Mock process methods
 const mockProcessExit = jest.fn();
@@ -366,5 +371,76 @@ describe("initialize TS", () => {
       "❌ Configuration Error: Failed to load configuration: Dotenv error",
     );
     expect(mockProcessExit).toHaveBeenCalledWith(1);
+  });
+});
+
+describe("sanitizeInput", () => {
+  test("should sanitize basic input", () => {
+    expect(sanitizeInput("  hello  ")).toBe("hello");
+  });
+
+  test("should remove null bytes and control characters", () => {
+    expect(sanitizeInput("hello\x00world\x1F")).toBe("helloworld");
+  });
+
+  test("should remove script tags", () => {
+    expect(sanitizeInput("hello<script>alert('xss')</script>world")).toBe("helloworld");
+  });
+
+  test("should strip HTML when specified", () => {
+    expect(sanitizeInput("<b>hello</b>", { stripHtml: true })).toBe("hello");
+  });
+
+  test("should limit length when specified", () => {
+    expect(sanitizeInput("verylongstring", { maxLength: 5 })).toBe("veryl");
+  });
+
+  test("should throw error for non-string input", () => {
+    expect(() => sanitizeInput(123 as unknown as string)).toThrow("Input must be a string");
+  });
+});
+
+describe("isSensitiveValue", () => {
+  test("should detect sensitive keys", () => {
+    expect(isSensitiveValue("DB_PASSWORD", "secret123")).toBe(true);
+    expect(isSensitiveValue("API_KEY", "key123")).toBe(true);
+    expect(isSensitiveValue("JWT_SECRET", "token")).toBe(true);
+  });
+
+  test("should detect base64-like values", () => {
+    expect(isSensitiveValue("SOME_VAR", "SGVsbG8gV29ybGQ=")).toBe(true);
+  });
+
+  test("should detect hex values", () => {
+    expect(
+      isSensitiveValue("HASH", "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3"),
+    ).toBe(true);
+  });
+
+  test("should not flag normal values", () => {
+    expect(isSensitiveValue("APP_NAME", "My App")).toBe(false);
+    expect(isSensitiveValue("PORT", "3000")).toBe(false);
+  });
+});
+
+describe("RateLimiter", () => {
+  test("should allow requests within limit", () => {
+    const limiter = new RateLimiter(1000, 2); // 1 second window, 2 requests
+    expect(limiter.isAllowed("user1")).toBe(true);
+    expect(limiter.isAllowed("user1")).toBe(true);
+  });
+
+  test("should block requests over limit", () => {
+    const limiter = new RateLimiter(1000, 2);
+    limiter.isAllowed("user1");
+    limiter.isAllowed("user1");
+    expect(limiter.isAllowed("user1")).toBe(false);
+  });
+
+  test("should track remaining requests", () => {
+    const limiter = new RateLimiter(1000, 3);
+    expect(limiter.getRemainingRequests("user1")).toBe(3);
+    limiter.isAllowed("user1");
+    expect(limiter.getRemainingRequests("user1")).toBe(2);
   });
 });

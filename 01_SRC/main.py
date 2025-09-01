@@ -16,13 +16,145 @@ import sys
 import logging
 import re
 import argparse
+import time
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from dataclasses import dataclass
 import traceback
 
 import typer
 from dotenv import load_dotenv
+
+def sanitize_input(input_str: str, max_length: Optional[int] = None, strip_html: bool = False) -> str:
+    """
+    Sanitize user input to prevent injection attacks.
+
+    Args:
+        input_str: Input string to sanitize
+        max_length: Maximum allowed length
+        strip_html: Whether to strip HTML tags
+
+    Returns:
+        Sanitized string
+
+    Raises:
+        ValueError: If input is not a string
+    """
+    if not isinstance(input_str, str):
+        raise ValueError('Input must be a string')
+
+    sanitized = input_str.strip()
+
+    # Remove null bytes and control characters
+    sanitized = re.sub(r'[\x00-\x1F\x7F]', '', sanitized)
+
+    # Remove potential script tags
+    sanitized = re.sub(r'<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>', '', sanitized, flags=re.IGNORECASE)
+
+    # Remove HTML tags if specified
+    if strip_html:
+        sanitized = re.sub(r'<[^>]*>', '', sanitized)
+
+    # Limit length
+    if max_length and len(sanitized) > max_length:
+        sanitized = sanitized[:max_length]
+
+    return sanitized
+
+def is_sensitive_value(key: str, value: str) -> bool:
+    """
+    Check if a configuration value appears to contain sensitive information.
+
+    Args:
+        key: Configuration key
+        value: Configuration value
+
+    Returns:
+        True if value appears sensitive
+    """
+    sensitive_keys = ['password', 'secret', 'key', 'token', 'credential']
+    sensitive_patterns = [
+        re.compile(r'^[a-zA-Z0-9+/=]{20,}$'),  # Base64-like
+        re.compile(r'^[a-f0-9]{32,}$', re.IGNORECASE),  # Hex hash
+    ]
+
+    lower_key = key.lower()
+    lower_value = value.lower()
+
+    # Check key name
+    if any(sensitive in lower_key for sensitive in sensitive_keys):
+        return True
+
+    # Check value patterns
+    if any(pattern.match(value) for pattern in sensitive_patterns):
+        return True
+
+    # Check for common secret indicators
+    if any(indicator in lower_value for indicator in ['secret', 'password', 'token', 'key']):
+        return True
+
+    return False
+
+class RateLimiter:
+    """Simple in-memory rate limiter."""
+
+    def __init__(self, window_ms: int = 900000, max_requests: int = 100):
+        self.window_ms = window_ms
+        self.max_requests = max_requests
+        self.requests: Dict[str, list] = {}
+
+    def is_allowed(self, identifier: str) -> bool:
+        """
+        Check if request is allowed.
+
+        Args:
+            identifier: Unique identifier (e.g., IP address)
+
+        Returns:
+            True if request is allowed
+        """
+        now = time.time() * 1000  # Convert to milliseconds
+        window_start = now - self.window_ms
+
+        if identifier not in self.requests:
+            self.requests[identifier] = []
+
+        user_requests = self.requests[identifier]
+
+        # Remove old requests outside the window
+        valid_requests = [t for t in user_requests if t > window_start]
+        self.requests[identifier] = valid_requests
+
+        if len(valid_requests) >= self.max_requests:
+            return False
+
+        # Add current request
+        valid_requests.append(now)
+        return True
+
+    def get_remaining_requests(self, identifier: str) -> int:
+        """
+        Get remaining requests for identifier.
+
+        Args:
+            identifier: Unique identifier
+
+        Returns:
+            Remaining requests
+        """
+        now = time.time() * 1000
+        window_start = now - self.window_ms
+
+        if identifier not in self.requests:
+            return self.max_requests
+
+        user_requests = self.requests[identifier]
+        valid_requests = [t for t in user_requests if t > window_start]
+
+        return max(0, self.max_requests - len(valid_requests))
+
+# Global rate limiter instance
+rate_limiter = RateLimiter()
 
 # =============================================================================
 # CONFIGURATION MANAGEMENT
@@ -76,6 +208,12 @@ def load_configuration() -> AppConfig:
 
         # Validate configuration
         validate_config(config)
+
+        # Check for sensitive information in configuration
+        for key, value in os.environ.items():
+            if is_sensitive_value(key, value):
+                logging.warning("⚠️  Potential sensitive information detected in environment variable: %s", key)
+                logging.warning("Consider using secure vaults or encrypted storage for sensitive data.")
 
         return config
 
@@ -175,23 +313,27 @@ class GreetingService:
         Raises:
             ValueError: If name is invalid
         """
-        if not name or not isinstance(name, str):
-            raise ValueError("Name must be a non-empty string")
+        # Rate limiting check
+        identifier = 'greet_function'  # In a real app, use IP or user ID
+        if not rate_limiter.is_allowed(identifier):
+            raise ValueError("Rate limit exceeded. Please try again later.")
 
-        trimmed_name = name.strip()
-        if not trimmed_name:
-            raise ValueError("Name cannot be empty after trimming")
+        # Input sanitization
+        sanitized_name = sanitize_input(name, max_length=50, strip_html=True)
+
+        if not sanitized_name:
+            raise ValueError("Name cannot be empty after sanitization")
 
         # Validate name length and characters
-        if len(trimmed_name) < 1 or len(trimmed_name) > 50:
+        if len(sanitized_name) < 1 or len(sanitized_name) > 50:
             raise ValueError("Name must be between 1 and 50 characters long")
 
-        if (not re.match(r"^[a-zA-Z\s\-']+$", trimmed_name) or
-                '\n' in trimmed_name or '\t' in trimmed_name):
+        if (not re.match(r"^[a-zA-Z\s\-']+$", sanitized_name) or
+                '\n' in sanitized_name or '\t' in sanitized_name):
             raise ValueError("Name can only contain letters, spaces, hyphens, and apostrophes")
 
-        greeting = f"Hello, {trimmed_name}! Welcome to {self.config.app_name}"
-        self.logger.info("Generated greeting for: %s", trimmed_name)
+        greeting = f"Hello, {sanitized_name}! Welcome to {self.config.app_name}"
+        self.logger.info("Generated greeting for: %s", sanitized_name)
         return greeting
 
     def get_multiple_greetings(self, names: list[str]) -> list[str]:

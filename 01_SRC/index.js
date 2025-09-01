@@ -29,6 +29,144 @@ const logger = {
 // Global configuration object
 let appConfig = null;
 
+/**
+ * Sanitize user input to prevent injection attacks
+ * @param {string} input - Input string to sanitize
+ * @param {Object} options - Sanitization options
+ * @returns {string} Sanitized input
+ */
+function sanitizeInput(input, options = {}) {
+  if (typeof input !== "string") {
+    throw new Error("Input must be a string");
+  }
+
+  let sanitized = input.trim();
+
+  // Remove null bytes and control characters
+  sanitized = [...sanitized]
+    .filter((char) => {
+      const code = char.charCodeAt(0);
+      return code >= 32 && code !== 127; // Keep printable characters only
+    })
+    .join("");
+
+  // Remove potential script tags (safer version to avoid ReDoS)
+  sanitized = sanitized.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "");
+
+  // Remove HTML tags if specified
+  if (options.stripHtml) {
+    sanitized = sanitized.replace(/<[^>]*>/g, "");
+  }
+
+  // Limit length
+  if (options.maxLength && sanitized.length > options.maxLength) {
+    sanitized = sanitized.substring(0, options.maxLength);
+  }
+
+  return sanitized;
+}
+
+/**
+ * Check if a configuration value appears to contain sensitive information
+ * @param {string} key - Configuration key
+ * @param {string} value - Configuration value
+ * @returns {boolean} True if value appears sensitive
+ */
+function isSensitiveValue(key, value) {
+  const sensitiveKeys = ["password", "secret", "key", "token", "credential"];
+  const sensitivePatterns = [
+    /^[a-zA-Z0-9+/=]{10,}$/, // Base64-like
+    /^[a-f0-9]{32,}$/i, // Hex hash
+  ];
+
+  const lowerKey = key.toLowerCase();
+  const lowerValue = value.toLowerCase();
+
+  // Check key name
+  if (sensitiveKeys.some((sensitive) => lowerKey.includes(sensitive))) {
+    return true;
+  }
+
+  // Check value patterns
+  if (sensitivePatterns.some((pattern) => pattern.test(value))) {
+    return true;
+  }
+
+  // Check for common secret indicators
+  if (
+    lowerValue.includes("secret") ||
+    lowerValue.includes("password") ||
+    lowerValue.includes("token") ||
+    lowerValue.includes("key")
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Simple in-memory rate limiter
+ */
+class RateLimiter {
+  constructor(windowMs = 900000, maxRequests = 100) {
+    // 15 minutes, 100 requests
+    this.windowMs = windowMs;
+    this.maxRequests = maxRequests;
+    this.requests = new Map();
+  }
+
+  /**
+   * Check if request is allowed
+   * @param {string} identifier - Unique identifier (e.g., IP address)
+   * @returns {boolean} True if request is allowed
+   */
+  isAllowed(identifier) {
+    const now = Date.now();
+    const windowStart = now - this.windowMs;
+
+    if (!this.requests.has(identifier)) {
+      this.requests.set(identifier, []);
+    }
+
+    const userRequests = this.requests.get(identifier);
+
+    // Remove old requests outside the window
+    const validRequests = userRequests.filter((time) => time > windowStart);
+    this.requests.set(identifier, validRequests);
+
+    if (validRequests.length >= this.maxRequests) {
+      return false;
+    }
+
+    // Add current request
+    validRequests.push(now);
+    return true;
+  }
+
+  /**
+   * Get remaining requests for identifier
+   * @param {string} identifier - Unique identifier
+   * @returns {number} Remaining requests
+   */
+  getRemainingRequests(identifier) {
+    const now = Date.now();
+    const windowStart = now - this.windowMs;
+
+    if (!this.requests.has(identifier)) {
+      return this.maxRequests;
+    }
+
+    const userRequests = this.requests.get(identifier);
+    const validRequests = userRequests.filter((time) => time > windowStart);
+
+    return Math.max(0, this.maxRequests - validRequests.length);
+  }
+}
+
+// Global rate limiter instance
+const rateLimiter = new RateLimiter();
+
 // =============================================================================
 // CONFIGURATION MANAGEMENT
 // =============================================================================
@@ -90,13 +228,23 @@ async function loadConfiguration() {
 
     const debug = process.env.DEBUG === "true";
 
-    return {
+    const config = {
       appName: appName.trim(),
       appVersion,
       environment,
       port,
       debug,
     };
+
+    // Check for sensitive information in configuration
+    for (const [key, value] of Object.entries(process.env)) {
+      if (isSensitiveValue(key, value)) {
+        logger.warn(`⚠️  Potential sensitive information detected in environment variable: ${key}`);
+        logger.warn("Consider using secure vaults or encrypted storage for sensitive data.");
+      }
+    }
+
+    return config;
   } catch (error) {
     logger.error("Failed to load configuration:", error.message);
     return getDefaultConfig();
@@ -139,17 +287,26 @@ function greet(name, appName = "Project Template") {
     throw new Error("Name cannot be empty after trimming whitespace");
   }
 
+  // Rate limiting check
+  const identifier = "greet_function"; // In a real app, use IP or user ID
+  if (!rateLimiter.isAllowed(identifier)) {
+    throw new Error("Rate limit exceeded. Please try again later.");
+  }
+
   // Length validation
   if (trimmedName.length < 1 || trimmedName.length > 50) {
     throw new Error(`Name must be between 1 and 50 characters (received ${trimmedName.length})`);
   }
 
+  // Input sanitization
+  const sanitizedName = sanitizeInput(trimmedName, { stripHtml: true });
+
   // Character validation - only allow letters, spaces, hyphens, and apostrophes
-  if (!/^[a-zA-Z\s\-']+$/.test(trimmedName)) {
+  if (!/^[a-zA-Z\s\-']+$/.test(sanitizedName)) {
     throw new Error("Name can only contain letters, spaces, hyphens, and apostrophes");
   }
 
-  return `Hello, ${trimmedName}! Welcome to ${appName}`;
+  return `Hello, ${sanitizedName}! Welcome to ${appName}`;
 }
 
 /**
@@ -303,4 +460,7 @@ module.exports = {
   getAppInfo,
   loadConfiguration,
   initialize,
+  sanitizeInput,
+  isSensitiveValue,
+  RateLimiter,
 };

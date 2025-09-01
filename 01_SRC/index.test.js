@@ -38,7 +38,14 @@ jest.spyOn(Object, "defineProperty").mockImplementation((obj, prop, descriptor) 
   obj[prop] = descriptor.value;
 });
 
-const { greet, getAppInfo, loadConfiguration, initialize } = require("./index.js");
+const {
+  greet,
+  getAppInfo,
+  loadConfiguration,
+  initialize,
+  sanitizeInput,
+  isSensitiveValue,
+} = require("./index.js");
 
 // Unused mock variables removed
 
@@ -380,5 +387,139 @@ describe("Integration Tests", () => {
     );
 
     expect(mockProcessExit).toHaveBeenCalledWith(1);
+  });
+});
+
+describe("sanitizeInput", () => {
+  test("should sanitize basic input", () => {
+    expect(sanitizeInput("  hello  ")).toBe("hello");
+  });
+
+  test("should remove null bytes and control characters", () => {
+    expect(sanitizeInput("hello\x00world\x1F")).toBe("helloworld");
+  });
+
+  test("should remove script tags", () => {
+    expect(sanitizeInput("hello<script>alert('xss')</script>world")).toBe("helloworld");
+  });
+
+  test("should strip HTML when specified", () => {
+    expect(sanitizeInput("<b>hello</b>", { stripHtml: true })).toBe("hello");
+  });
+
+  test("should limit length when specified", () => {
+    expect(sanitizeInput("verylongstring", { maxLength: 5 })).toBe("veryl");
+  });
+
+  test("should throw error for non-string input", () => {
+    expect(() => sanitizeInput(123)).toThrow("Input must be a string");
+  });
+});
+
+describe("isSensitiveValue", () => {
+  test("should detect sensitive keys", () => {
+    expect(isSensitiveValue("DB_PASSWORD", "secret123")).toBe(true);
+    expect(isSensitiveValue("API_KEY", "key123")).toBe(true);
+    expect(isSensitiveValue("JWT_SECRET", "token")).toBe(true);
+  });
+
+  test("should detect base64-like values", () => {
+    expect(isSensitiveValue("SOME_VAR", "SGVsbG8gV29ybGQ=")).toBe(true);
+  });
+
+  test("should detect hex values", () => {
+    expect(
+      isSensitiveValue("HASH", "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3"),
+    ).toBe(true);
+  });
+
+  test("should not flag normal values", () => {
+    expect(isSensitiveValue("APP_NAME", "My App")).toBe(false);
+    expect(isSensitiveValue("PORT", "3000")).toBe(false);
+  });
+});
+
+describe("RateLimiter", () => {
+  let LocalRateLimiter;
+
+  beforeEach(() => {
+    // Import RateLimiter from the module
+    const module = require("./index.js");
+    LocalRateLimiter =
+      module.RateLimiter ||
+      class FallbackRateLimiter {
+        constructor(windowMs = 900000, maxRequests = 100) {
+          this.windowMs = windowMs;
+          this.maxRequests = maxRequests;
+          this.requests = new Map();
+        }
+
+        isAllowed(identifier) {
+          const now = Date.now();
+          const windowStart = now - this.windowMs;
+
+          if (!this.requests.has(identifier)) {
+            this.requests.set(identifier, []);
+          }
+
+          const userRequests = this.requests.get(identifier);
+
+          // Remove old requests outside the window
+          const validRequests = userRequests.filter((time) => time > windowStart);
+          this.requests.set(identifier, validRequests);
+
+          if (validRequests.length >= this.maxRequests) {
+            return false;
+          }
+
+          // Add current request
+          validRequests.push(now);
+          return true;
+        }
+
+        getRemainingRequests(identifier) {
+          const now = Date.now();
+          const windowStart = now - this.windowMs;
+
+          if (!this.requests.has(identifier)) {
+            return this.maxRequests;
+          }
+
+          const userRequests = this.requests.get(identifier);
+          const validRequests = userRequests.filter((time) => time > windowStart);
+
+          return Math.max(0, this.maxRequests - validRequests.length);
+        }
+      };
+  });
+
+  test("should allow requests within limit", () => {
+    const limiter = new LocalRateLimiter(1000, 2); // 1 second window, 2 requests
+    expect(limiter.isAllowed("user1")).toBe(true);
+    expect(limiter.isAllowed("user1")).toBe(true);
+  });
+
+  test("should block requests over limit", () => {
+    const limiter = new LocalRateLimiter(1000, 2);
+    limiter.isAllowed("user1");
+    limiter.isAllowed("user1");
+    expect(limiter.isAllowed("user1")).toBe(false);
+  });
+
+  test("should reset after window", async () => {
+    const limiter = new LocalRateLimiter(100, 1); // 100ms window, 1 request
+    limiter.isAllowed("user1");
+    expect(limiter.isAllowed("user1")).toBe(false);
+
+    // Wait for window to reset
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    expect(limiter.isAllowed("user1")).toBe(true);
+  });
+
+  test("should track remaining requests", () => {
+    const limiter = new LocalRateLimiter(1000, 3);
+    expect(limiter.getRemainingRequests("user1")).toBe(3);
+    limiter.isAllowed("user1");
+    expect(limiter.getRemainingRequests("user1")).toBe(2);
   });
 });

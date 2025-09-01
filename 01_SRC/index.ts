@@ -14,6 +14,131 @@ import * as path from "path";
 import * as fs from "fs/promises";
 import * as dotenv from "dotenv";
 
+/**
+ * Sanitize user input to prevent injection attacks
+ */
+function sanitizeInput(
+  input: string,
+  options: { maxLength?: number; stripHtml?: boolean } = {},
+): string {
+  if (typeof input !== "string") {
+    throw new Error("Input must be a string");
+  }
+
+  let sanitized = input.trim();
+
+  // Remove null bytes and control characters
+  sanitized = [...sanitized]
+    .filter((char) => {
+      const code = char.charCodeAt(0);
+      return code >= 32 && code !== 127; // Keep printable characters only
+    })
+    .join("");
+
+  // Remove potential script tags (safer version to avoid ReDoS)
+  sanitized = sanitized.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "");
+
+  // Remove HTML tags if specified
+  if (options.stripHtml) {
+    sanitized = sanitized.replace(/<[^>]*>/g, "");
+  }
+
+  // Limit length
+  if (options.maxLength && sanitized.length > options.maxLength) {
+    sanitized = sanitized.substring(0, options.maxLength);
+  }
+
+  return sanitized;
+}
+
+/**
+ * Check if a configuration value appears to contain sensitive information
+ */
+function isSensitiveValue(key: string, value: string): boolean {
+  const sensitiveKeys = ["password", "secret", "key", "token", "credential"];
+  const sensitivePatterns = [
+    /^[a-zA-Z0-9+/=]{10,}$/, // Base64-like
+    /^[a-f0-9]{32,}$/i, // Hex hash
+  ];
+
+  const lowerKey = key.toLowerCase();
+  const lowerValue = value.toLowerCase();
+
+  // Check key name
+  if (sensitiveKeys.some((sensitive) => lowerKey.includes(sensitive))) {
+    return true;
+  }
+
+  // Check value patterns
+  if (sensitivePatterns.some((pattern) => pattern.test(value))) {
+    return true;
+  }
+
+  // Check for common secret indicators
+  if (
+    lowerValue.includes("secret") ||
+    lowerValue.includes("password") ||
+    lowerValue.includes("token") ||
+    lowerValue.includes("key")
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Simple in-memory rate limiter
+ */
+class RateLimiter {
+  private requests: Map<string, number[]> = new Map();
+
+  constructor(
+    private windowMs: number = 900000,
+    private maxRequests: number = 100,
+  ) {}
+
+  isAllowed(identifier: string): boolean {
+    const now = Date.now();
+    const windowStart = now - this.windowMs;
+
+    if (!this.requests.has(identifier)) {
+      this.requests.set(identifier, []);
+    }
+
+    const userRequests = this.requests.get(identifier)!;
+
+    // Remove old requests outside the window
+    const validRequests = userRequests.filter((time) => time > windowStart);
+    this.requests.set(identifier, validRequests);
+
+    if (validRequests.length >= this.maxRequests) {
+      return false;
+    }
+
+    // Add current request
+    validRequests.push(now);
+    return true;
+  }
+
+  getRemainingRequests(identifier: string): number {
+    const now = Date.now();
+    const windowStart = now - this.windowMs;
+
+    if (!this.requests.has(identifier)) {
+      return this.maxRequests;
+    }
+
+    const userRequests = this.requests.get(identifier)!;
+    const validRequests = userRequests.filter((time) => time > windowStart);
+
+    return Math.max(0, this.maxRequests - validRequests.length);
+  }
+}
+
+// Global rate limiter instance
+const rateLimiter = new RateLimiter();
+
 // =============================================================================
 // TYPE DEFINITIONS
 // =============================================================================
@@ -124,6 +249,16 @@ async function loadConfiguration(): Promise<AppConfig> {
     // Validate configuration
     validateConfig(config);
 
+    // Check for sensitive information in configuration
+    for (const [key, value] of Object.entries(process.env)) {
+      if (value && isSensitiveValue(key, value)) {
+        console.warn(
+          `⚠️  Potential sensitive information detected in environment variable: ${key}`,
+        );
+        console.warn("Consider using secure vaults or encrypted storage for sensitive data.");
+      }
+    }
+
     return config;
   } catch (error) {
     if (error instanceof ValidationError) {
@@ -208,12 +343,35 @@ class GreetingService {
    * @throws ValidationError if name is invalid
    */
   public greet(name: string): string {
-    this.validateName(name);
+    // Input validation
+    if (typeof name !== "string") {
+      throw new ValidationError("Name must be a non-empty string", "name");
+    }
 
     const trimmedName = name.trim();
-    const greeting = `Hello, ${trimmedName}! Welcome to ${this.config.appName}`;
+    if (!trimmedName) {
+      throw new ValidationError("Name cannot be empty after trimming", "name");
+    }
 
-    this.logger.debug(`Generated greeting for: ${trimmedName}`);
+    // Rate limiting check
+    const identifier = "greet_function"; // In a real app, use IP or user ID
+    if (!rateLimiter.isAllowed(identifier)) {
+      throw new ValidationError("Rate limit exceeded. Please try again later.", "name");
+    }
+
+    // Length validation
+    if (trimmedName.length < 1 || trimmedName.length > 50) {
+      throw new ValidationError("Name must be between 1 and 50 characters", "name");
+    }
+
+    // Input sanitization
+    const sanitizedName = sanitizeInput(trimmedName, { stripHtml: true });
+
+    this.validateName(sanitizedName);
+
+    const greeting = `Hello, ${sanitizedName}! Welcome to ${this.config.appName}`;
+
+    this.logger.debug(`Generated greeting for: ${sanitizedName}`);
 
     return greeting;
   }
@@ -237,16 +395,15 @@ class GreetingService {
       throw new ValidationError("Name must be a non-empty string", "name");
     }
 
-    const trimmedName = name.trim();
-    if (!trimmedName) {
-      throw new ValidationError("Name cannot be empty after trimming", "name");
+    if (!name) {
+      throw new ValidationError("Name cannot be empty after sanitization", "name");
     }
 
-    if (trimmedName.length < 1 || trimmedName.length > 50) {
+    if (name.length < 1 || name.length > 50) {
       throw new ValidationError("Name must be between 1 and 50 characters", "name");
     }
 
-    if (!/^[a-zA-Z\s\-']+$/.test(trimmedName)) {
+    if (!/^[a-zA-Z\s\-']+$/.test(name)) {
       throw new ValidationError(
         "Name can only contain letters, spaces, hyphens, and apostrophes",
         "name",
@@ -487,3 +644,6 @@ export {
   loadConfiguration,
   initialize,
 };
+
+// Export security functions for testing
+export { sanitizeInput, isSensitiveValue, RateLimiter };

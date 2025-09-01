@@ -30,20 +30,20 @@
   "environments": {
     "development": {
       "database": {
-        "host": "localhost",
-        "name": "myproject_dev"
+        "host": "${DB_HOST}",
+        "name": "${DB_NAME}"
       },
       "api": {
-        "baseUrl": "https://dev-api.example.com"
+        "baseUrl": "${API_BASE_URL}"
       }
     },
     "production": {
       "database": {
-        "host": "prod-db.example.com",
-        "name": "myproject_prod"
+        "host": "${DB_HOST}",
+        "name": "${DB_NAME}"
       },
       "api": {
-        "baseUrl": "https://api.example.com"
+        "baseUrl": "${API_BASE_URL}"
       }
     }
   },
