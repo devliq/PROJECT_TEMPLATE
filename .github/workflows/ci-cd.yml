@@ -265,13 +265,16 @@ jobs:
           sarif_file: "trivy-results.sarif"
 
       # Snyk Security Scan
-      - name: Run Snyk to check for vulnerabilities
-        uses: snyk/actions/node@0.5.0
+      - name: Setup Snyk
+        uses: snyk/actions/setup@v1
+
+      - name: Run Snyk scan
+        uses: snyk/actions/cli@v1
         continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          args: --severity-threshold=high
+          args: test --severity-threshold=high
 
       # Dependency Review (PR only)
       - name: Dependency Review
