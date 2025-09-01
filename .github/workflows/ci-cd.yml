@@ -27,12 +27,12 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@master
         with:
           fetch-depth: 0
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@master
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
@@ -40,7 +40,7 @@ jobs:
 
       - name: Cache Node.js dependencies
         id: node-cache
-        uses: actions/cache@v4
+        uses: actions/cache@master
         with:
           path: |
             ~/.npm
@@ -50,7 +50,7 @@ jobs:
             ${{ runner.os }}-node-
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@master
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: "pip"
@@ -58,7 +58,7 @@ jobs:
 
       - name: Cache Python dependencies
         id: python-cache
-        uses: actions/cache@v4
+        uses: actions/cache@master
         with:
           path: |
             ~/.cache/pip
@@ -88,16 +88,16 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@master
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@master
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@master
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: "pip"
@@ -153,16 +153,16 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@master
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@master
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@master
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: "pip"
@@ -182,7 +182,7 @@ jobs:
           REDIS_URL: redis://localhost:6379
 
       - name: Upload Jest coverage
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@master
         with:
           file: ./coverage/lcov.info
           flags: nodejs
@@ -198,7 +198,7 @@ jobs:
           REDIS_URL: redis://localhost:6379
 
       - name: Upload Python coverage
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@master
         with:
           file: ./tests/coverage.xml
           flags: python
@@ -207,7 +207,7 @@ jobs:
       # Test Results Artifacts
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@master
         with:
           name: test-results
           path: |
@@ -229,10 +229,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@master
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@master
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
@@ -242,7 +242,7 @@ jobs:
 
       # Gitleaks Secret Scanning (REQUIRED TO PASS)
       - name: Run Gitleaks
-        uses: gitleaks/gitleaks-action@v2
+        uses: gitleaks/gitleaks-action@master
         with:
           config-path: .gitleaks.toml
         env:
@@ -250,7 +250,7 @@ jobs:
 
       # Trivy Vulnerability Scanner
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.31.0
+        uses: aquasecurity/trivy-action@master
         with:
           scan-type: "fs"
           scan-ref: "."
@@ -259,7 +259,7 @@ jobs:
           severity: "CRITICAL,HIGH"
 
       - name: Upload Trivy scan results
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@master
         if: always()
         with:
           sarif_file: "trivy-results.sarif"
@@ -274,7 +274,7 @@ jobs:
           args: --severity-threshold=high --sarif-file-output=snyk.sarif
 
       - name: Upload Snyk scan results to GitHub Code Scanning
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@master
         if: always()
         with:
           sarif_file: snyk.sarif
@@ -282,7 +282,7 @@ jobs:
       # Dependency Review (PR only)
       - name: Dependency Review
         if: github.event_name == 'pull_request'
-        uses: actions/dependency-review-action@v4
+        uses: actions/dependency-review-action@master
 
   # =============================================================================
   # BUILD AND ARTIFACTS
@@ -295,16 +295,16 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@master
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@master
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@master
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: "pip"
@@ -321,10 +321,10 @@ jobs:
           python setup.py build 2>/dev/null || echo "No Python build setup"
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@master
 
       - name: Build Docker image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@master
         with:
           context: .
           push: false
@@ -345,7 +345,7 @@ jobs:
           tar -czf deployment-${{ github.sha }}.tar.gz deployment/
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@master
         with:
           name: deployment-package
           path: deployment-${{ github.sha }}.tar.gz
@@ -362,10 +362,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@master
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@master
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
@@ -377,7 +377,7 @@ jobs:
         run: npm install cypress --save-dev
 
       - name: Run Cypress e2e tests
-        uses: cypress-io/github-action@v6
+        uses: cypress-io/github-action@master
         with:
           build: npm run build
           start: npm start
@@ -388,7 +388,7 @@ jobs:
 
       - name: Upload Cypress screenshots
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@master
         with:
           name: cypress-screenshots
           path: cypress/screenshots
@@ -396,7 +396,7 @@ jobs:
 
       - name: Upload Cypress videos
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@master
         with:
           name: cypress-videos
           path: cypress/videos
@@ -414,10 +414,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@master
 
       - name: Download deployment artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@master
         with:
           name: deployment-package
 
@@ -427,7 +427,7 @@ jobs:
           rm deployment-${{ github.sha }}.tar.gz
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@master
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
@@ -441,7 +441,7 @@ jobs:
           NODE_ENV: production
 
       - name: Deploy to staging server
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.STAGING_HOST }}
           username: ${{ secrets.STAGING_USER }}
@@ -499,10 +499,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@master
 
       - name: Download deployment artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@master
         with:
           name: deployment-package
 
@@ -512,7 +512,7 @@ jobs:
           rm deployment-${{ github.sha }}.tar.gz
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@master
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
@@ -526,7 +526,7 @@ jobs:
           NODE_ENV: production
 
       - name: Deploy to production (Blue-Green)
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.PRODUCTION_HOST }}
           username: ${{ secrets.PRODUCTION_USER }}
@@ -613,10 +613,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@master
 
       - name: Run Renovate
-        uses: renovatebot/github-action@v40.1.11
+        uses: renovatebot/github-action@master
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           configurationFile: renovate.json
@@ -632,7 +632,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@master
 
       - name: Generate workflow summary
         id: summary
@@ -642,7 +642,7 @@ jobs:
 
       - name: Send Slack notification
         if: env.SLACK_WEBHOOK_URL != ''
-        uses: slackapi/slack-github-action@v1.26.0
+        uses: slackapi/slack-github-action@master
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         with:
@@ -734,7 +734,7 @@ jobs:
 
       - name: Create GitHub issue on critical failure
         if: steps.summary.outputs.has_critical_issues == 'true'
-        uses: actions/github-script@v7
+        uses: actions/github-script@master
         with:
           script: |
             const title = `🚨 Critical CI/CD Issues Detected - ${{ github.ref_name }}`;
