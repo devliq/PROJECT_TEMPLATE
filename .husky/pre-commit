@@ -5,13 +5,17 @@ echo "Current directory: $(pwd)"
 echo "Node version: $(node --version)"
 echo "NPM version: $(npm --version)"
 
-# Run lint-staged first (handles formatting and basic linting)
-echo "📝 Running lint-staged..."
-if ./node_modules/.bin/lint-staged; then
-  echo "✅ lint-staged passed"
+# Run lint-staged first (handles formatting and basic linting) only if there are staged files
+if [ -n "$(git diff --cached --name-only)" ]; then
+  echo "📝 Running lint-staged..."
+  if ./node_modules/.bin/lint-staged; then
+    echo "✅ lint-staged passed"
+  else
+    echo "❌ lint-staged failed"
+    exit 1
+  fi
 else
-  echo "❌ lint-staged failed"
-  exit 1
+  echo "📝 No staged files, skipping lint-staged"
 fi
 
 # Run TypeScript type checking

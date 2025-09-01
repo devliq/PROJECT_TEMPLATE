@@ -6,16 +6,20 @@ echo "📝 Validating commit message format..."
 # Basic commit message validation
 commit_msg=$(cat $1)
 
-# Check if commit message is not empty
-if [ -z "$commit_msg" ]; then
+# Check if commit message is not empty (allow empty for empty commits)
+if [ -z "$commit_msg" ] && [ -n "$(git diff --cached --name-only)" ]; then
     echo "❌ Commit message cannot be empty"
     exit 1
+elif [ -z "$commit_msg" ]; then
+    echo "ℹ️  Empty commit message allowed for empty commit"
 fi
 
-# Check minimum length
-if [ ${#commit_msg} -lt 10 ]; then
+# Check minimum length (skip for empty commits)
+if [ ${#commit_msg} -lt 10 ] && [ -n "$(git diff --cached --name-only)" ]; then
     echo "❌ Commit message is too short (minimum 10 characters)"
     exit 1
+elif [ ${#commit_msg} -lt 10 ]; then
+    echo "ℹ️  Short commit message allowed for empty commit"
 fi
 
 # Check for conventional commit format (optional but recommended)
