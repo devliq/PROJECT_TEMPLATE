@@ -12,6 +12,8 @@ import os
 import logging
 from unittest.mock import patch, MagicMock
 from pathlib import Path
+SRC = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "01_SRC")
+sys.path.insert(0, SRC)
 import main
 
 from main import (
@@ -29,8 +31,6 @@ from main import (
     is_sensitive_value,
 )
 
-SRC = Path(__file__).parent.parent / "01_SRC"
-sys.path.insert(0, str(SRC))
 
 # Import main module for testing
 
