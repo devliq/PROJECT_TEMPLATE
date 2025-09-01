@@ -266,10 +266,10 @@ jobs:
 
       # Snyk Security Scan
       - name: Setup Snyk
-        uses: snyk/actions/setup@v1
+        uses: snyk/actions/setup@master
 
       - name: Run Snyk scan
-        uses: snyk/actions/cli@v1
+        uses: snyk/actions/cli@master
         continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
