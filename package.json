@@ -97,7 +97,16 @@
       "01_SRC/**/*.ts",
       "!01_SRC/**/*.test.js",
       "!01_SRC/**/*.test.ts",
-      "!01_SRC/**/*.d.ts"
+      "!01_SRC/**/*.d.ts",
+      "!01_SRC/index.js",
+      "!01_SRC/index.ts"
+    ],
+    "coveragePathIgnorePatterns": [
+      "01_SRC/index.js",
+      "01_SRC/index.ts"
+    ],
+    "transformIgnorePatterns": [
+      "01_SRC/index\\.js$"
     ],
     "testMatch": [
       "**/__tests__/**/*.js",
@@ -106,7 +115,8 @@
       "**/?(*.)+(spec|test).ts"
     ],
     "transform": {
-      "^.+\\.ts$": "ts-jest"
+      "^.+\\.ts$": "ts-jest",
+      "^.+\\.js$": "babel-jest"
     },
     "moduleFileExtensions": [
       "ts",
