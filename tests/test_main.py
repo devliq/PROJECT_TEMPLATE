@@ -83,7 +83,9 @@ class TestConfiguration(unittest.TestCase):
             self.assertFalse(config.debug)
 
     @patch("main.Path.exists", return_value=True)
-    @patch.object(main, 'load_dotenv', side_effect=ImportError("No module named 'dotenv'"))
+    @patch.object(
+        main, 'load_dotenv', side_effect=ImportError("No module named 'dotenv'")
+    )
     @patch.dict(
         os.environ,
         {
@@ -187,7 +189,10 @@ class TestConfiguration(unittest.TestCase):
 
     def test_validate_config_invalid_semantic_version(self):
         """Test validating configuration with invalid semantic version."""
-        invalid_versions = ["1", "1.0.0.0", "1.0.0-beta", "v1.0.0", "1.0.0a", "abc", "1.2.3.4.5", "1..0", "1.0.", ".1.0", "1.0.0.0.0", "version1.0"]
+        invalid_versions = [
+            "1", "1.0.0.0", "1.0.0-beta", "v1.0.0", "1.0.0a", "abc",
+            "1.2.3.4.5", "1..0", "1.0.", ".1.0", "1.0.0.0.0", "version1.0"
+        ]
         for version in invalid_versions:
             with self.subTest(version=version):
                 config = AppConfig(
@@ -462,7 +467,9 @@ class TestIntegration(unittest.TestCase):
                         mock_parse_args.return_value = mock_args
 
                         # Import and call main_fallback
-                        with patch.object(logging.getLogger("src.main"), 'info') as mock_info:
+                        with patch.object(
+                            logging.getLogger("src.main"), 'info'
+                        ) as mock_info:
                             main.main_fallback()
 
                             # Verify logging calls
@@ -522,9 +529,7 @@ class TestIntegration(unittest.TestCase):
     ):
         """Test that application handles keyboard interrupt gracefully."""
         # Correct the mock assignments based on the actual order
-        actual_mock_sys_exit = mock_main_path_exists
-        actual_mock_main_load_dotenv = mock_main_load_dotenv
-        actual_mock_main_path_exists = mock_sys_exit
+        actual_mock_sys_exit = mock_sys_exit
 
         with patch.dict(
             os.environ,
@@ -540,8 +545,12 @@ class TestIntegration(unittest.TestCase):
                     mock_parse_args.return_value = mock_args
 
                     # Simulate KeyboardInterrupt during main execution
-                    with patch.object(main, 'load_configuration', side_effect=KeyboardInterrupt):
-                        with patch.object(logging.getLogger("src.main"), 'info') as mock_info:
+                    with patch.object(
+                        main, 'load_configuration', side_effect=KeyboardInterrupt
+                    ):
+                        with patch.object(
+                            logging.getLogger("src.main"), 'info'
+                        ) as mock_info:
                             main.main_fallback()
 
                             mock_info.assert_called_with(
