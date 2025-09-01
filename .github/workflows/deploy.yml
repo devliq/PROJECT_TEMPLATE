@@ -25,7 +25,7 @@ jobs:
       - name: Download deployment artifact
         uses: actions/download-artifact@v4
         with:
-          name: deployment-artifact
+          name: deployment-package
 
       - name: Extract deployment artifact
         run: |
@@ -96,7 +96,7 @@ jobs:
           status: success
           text: "✅ Staging deployment successful - ${{ github.sha }}"
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
       - name: Notify deployment failure
         uses: 8398a7/action-slack@v3
@@ -106,7 +106,7 @@ jobs:
           status: failure
           text: "❌ Staging deployment failed - ${{ github.sha }}"
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
   # =============================================================================
   # DEPLOY TO PRODUCTION
@@ -124,7 +124,7 @@ jobs:
       - name: Download deployment artifact
         uses: actions/download-artifact@v4
         with:
-          name: deployment-artifact
+          name: deployment-package
 
       - name: Extract deployment artifact
         run: |
@@ -222,7 +222,7 @@ jobs:
           status: success
           text: "🚀 Production deployment successful - ${{ github.sha }}"
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
       - name: Notify production deployment failure
         uses: 8398a7/action-slack@v3
@@ -232,7 +232,7 @@ jobs:
           status: failure
           text: "💥 Production deployment failed - ${{ github.sha }}"
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
   # =============================================================================
   # POST-DEPLOYMENT MONITORING

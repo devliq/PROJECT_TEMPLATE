@@ -16,7 +16,7 @@ import tempfile
 import shutil
 
 # Add the 01_SRC directory to the path so we can import modules
-sys.path.insert(0, str(Path(__file__).parent.parent / '01_SRC'))
+sys.path.insert(0, str(Path(__file__).parent.parent / "01_SRC"))
 
 
 class TestTemplate(unittest.TestCase):
@@ -57,7 +57,7 @@ class TestTemplate(unittest.TestCase):
         # self.assertEqual(result, "mocked result")
         self.mock_object.some_method.assert_called_once()
 
-    @patch('module.function_to_mock')
+    @patch("module.function_to_mock")
     def test_with_patch_decorator(self, mock_function):
         """Example of testing with patch decorator"""
         # Arrange
@@ -72,7 +72,7 @@ class TestTemplate(unittest.TestCase):
 
     def test_context_manager_mocking(self):
         """Example of testing with context manager mocking"""
-        with patch('module.function_to_mock') as mock_function:
+        with patch("module.function_to_mock") as mock_function:
             # Arrange
             mock_function.return_value = "context result"
 
@@ -163,7 +163,7 @@ class TestAsyncFunctionality(unittest.TestCase):
         # Assert
         # self.assertEqual(result, expected_result)
 
-    @patch('module.async_function_to_mock')
+    @patch("module.async_function_to_mock")
     async def test_async_with_mock(self, mock_async_func):
         """Test async function with mocking"""
         # Arrange
@@ -219,14 +219,14 @@ class TestFileOperations(unittest.TestCase):
     def test_file_creation(self):
         """Test file creation"""
         # Create a test file
-        with open(self.temp_file, 'w', encoding='utf-8') as f:
+        with open(self.temp_file, "w", encoding="utf-8") as f:
             f.write("test content")
 
         # Verify file exists
         self.assertTrue(os.path.exists(self.temp_file))
 
         # Read and verify content
-        with open(self.temp_file, 'r', encoding='utf-8') as f:
+        with open(self.temp_file, "r", encoding="utf-8") as f:
             content = f.read()
         self.assertEqual(content, "test content")
 
@@ -270,7 +270,7 @@ class TestParameterized(unittest.TestCase):
                 pass
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Run the tests
     unittest.main(verbosity=2)
 

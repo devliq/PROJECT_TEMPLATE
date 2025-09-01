@@ -128,6 +128,8 @@ jobs:
           npm run lint:fix
           if [ -n "$(git status --porcelain)" ]; then
             echo "ESLint auto-fix applied changes"
+            git config --global user.name "github-actions[bot]"
+            git config --global user.email "github-actions[bot]@users.noreply.github.com"
             git add .
             git commit -m "fix: auto-fix linting issues [skip ci]"
             git push
@@ -143,6 +145,8 @@ jobs:
           npm run format
           if [ -n "$(git status --porcelain)" ]; then
             echo "Prettier auto-format applied changes"
+            git config --global user.name "github-actions[bot]"
+            git config --global user.email "github-actions[bot]@users.noreply.github.com"
             git add .
             git commit -m "style: auto-format code [skip ci]"
             git push
@@ -167,6 +171,8 @@ jobs:
           black 01_SRC/ 02_TEST/
           if [ -n "$(git status --porcelain)" ]; then
             echo "Black auto-format applied changes"
+            git config --global user.name "github-actions[bot]"
+            git config --global user.email "github-actions[bot]@users.noreply.github.com"
             git add .
             git commit -m "style: auto-format Python code [skip ci]"
             git push
