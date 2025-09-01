@@ -1,22 +1,44 @@
 #!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
 
 echo "🔍 Running pre-commit quality checks..."
+echo "Current directory: $(pwd)"
+echo "Node version: $(node --version)"
+echo "NPM version: $(npm --version)"
 
 # Run lint-staged first (handles formatting and basic linting)
 echo "📝 Running lint-staged..."
-npx lint-staged
+if ./node_modules/.bin/lint-staged; then
+  echo "✅ lint-staged passed"
+else
+  echo "❌ lint-staged failed"
+  exit 1
+fi
 
 # Run TypeScript type checking
 echo "🔧 Running TypeScript type checking..."
-npm run typecheck
+if npm run typecheck; then
+  echo "✅ TypeScript typecheck passed"
+else
+  echo "❌ TypeScript typecheck failed"
+  exit 1
+fi
 
 # Run security checks
 echo "🔒 Running security checks..."
-npm run security:audit
+if npm run security:audit; then
+  echo "✅ Security audit passed"
+else
+  echo "❌ Security audit failed"
+  exit 1
+fi
 
 # Run comprehensive tests
 echo "🧪 Running tests..."
-npm test
+if npm test; then
+  echo "✅ Tests passed"
+else
+  echo "❌ Tests failed"
+  exit 1
+fi
 
 echo "✅ All pre-commit checks passed!"

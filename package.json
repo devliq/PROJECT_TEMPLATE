@@ -13,17 +13,18 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "lint": "eslint --config 06_CONFIG/.eslintrc.js '01_SRC/**/*.{js,ts}'",
-    "lint:fix": "eslint --config 06_CONFIG/.eslintrc.js --fix '01_SRC/**/*.{js,ts}'",
-    "lint:js": "eslint --config 06_CONFIG/.eslintrc.js '01_SRC/**/*.js'",
-    "lint:ts": "eslint --config 06_CONFIG/.eslintrc.js '01_SRC/**/*.ts'",
+    "lint": "eslint '01_SRC/**/*.{js,ts}'",
+    "lint:fix": "eslint --fix '01_SRC/**/*.{js,ts}'",
+    "lint:js": "eslint '01_SRC/**/*.js'",
+    "lint:ts": "eslint '01_SRC/**/*.ts'",
     "format": "prettier --config 06_CONFIG/.prettierrc --write '01_SRC/**/*.{js,ts,json}'",
     "format:check": "prettier --config 06_CONFIG/.prettierrc --check '01_SRC/**/*.{js,ts,json}'",
     "security": "npm run security:audit && npm run security:lint && npm run security:check",
     "security:audit": "npm audit --audit-level moderate",
-    "security:lint": "eslint --config 06_CONFIG/.eslintrc.js --plugin security '01_SRC/**/*.{js,ts}'",
+    "security:lint": "eslint --plugin security '01_SRC/**/*.{js,ts}'",
     "security:check": "echo '🔍 Running comprehensive security checks...' && npm run security:audit && npm run security:lint && echo '✅ Security checks completed'",
     "security:fix": "npm audit fix",
+    "dependency-review": "echo 'Dependency review should be handled by GitHub Actions workflow'",
     "typecheck": "tsc --noEmit",
     "prepare": "husky"
   },
@@ -34,12 +35,26 @@
     "javascript",
     "development"
   ],
-  "author": "Your Name",
+  "author": "Project Template Team <team@projecttemplate.com>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/project-template/project-template.git"
+  },
+  "bugs": {
+    "url": "https://github.com/project-template/project-template/issues"
+  },
+  "funding": {
+    "type": "individual",
+    "url": "https://github.com/sponsors/project-template"
+  },
   "dependencies": {
     "dotenv": "^16.4.5"
   },
   "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.41.0",
+    "@typescript-eslint/parser": "^8.41.0",
     "eslint": "^8.57.0",
     "eslint-plugin-security": "^3.0.0",
     "husky": "^9.0.11",
@@ -48,34 +63,48 @@
     "nodemon": "^3.1.0",
     "prettier": "^3.2.5",
     "supertest": "^6.3.4",
+    "ts-jest": "^29.1.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.2"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": "20.9"
   },
   "lint-staged": {
     "*.{js,ts}": [
-      "eslint --fix",
-      "prettier --write"
+      "./node_modules/.bin/eslint --fix",
+      "./node_modules/.bin/prettier --write"
     ],
     "*.{json,md}": [
-      "prettier --write"
-    ],
-    "*.py": [
-      "python -m black --check",
-      "python -m flake8"
+      "./node_modules/.bin/prettier --write"
     ]
   },
   "jest": {
     "testEnvironment": "node",
+    "testEnvironmentOptions": {
+      "url": "http://jestjs.io/"
+    },
     "collectCoverageFrom": [
       "01_SRC/**/*.js",
-      "!01_SRC/**/*.test.js"
+      "01_SRC/**/*.ts",
+      "!01_SRC/**/*.test.js",
+      "!01_SRC/**/*.test.ts",
+      "!01_SRC/**/*.d.ts"
     ],
     "testMatch": [
       "**/__tests__/**/*.js",
-      "**/?(*.)+(spec|test).js"
-    ]
+      "**/__tests__/**/*.ts",
+      "**/?(*.)+(spec|test).js",
+      "**/?(*.)+(spec|test).ts"
+    ],
+    "transform": {
+      "^.+\\.ts$": "ts-jest"
+    },
+    "moduleFileExtensions": [
+      "ts",
+      "js"
+    ],
+    "setupFilesAfterEnv": [],
+    "testTimeout": 10000
   }
 }

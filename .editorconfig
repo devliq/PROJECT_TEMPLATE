@@ -15,23 +15,28 @@ trim_trailing_whitespace = true
 # JavaScript, TypeScript, JSON
 [*.{js,jsx,ts,tsx,json}]
 indent_size = 2
+max_line_length = 100
 
 # Python
 [*.py]
 indent_style = space
 indent_size = 4
+max_line_length = 88
 
 # YAML
 [*.{yml,yaml}]
 indent_size = 2
+max_line_length = 120
 
 # Markdown
 [*.md]
 trim_trailing_whitespace = false
+max_line_length = 80
 
 # Shell scripts
 [*.sh]
 end_of_line = lf
+max_line_length = 100
 
 # Makefiles
 [Makefile]
@@ -40,14 +45,43 @@ indent_style = tab
 # Docker
 [Dockerfile*]
 indent_size = 4
+max_line_length = 120
 
 # Terraform
 [*.tf]
 indent_size = 2
+max_line_length = 120
 
 # Configuration files
 [*.{ini,cfg,conf}]
 indent_size = 4
+max_line_length = 120
+
+# Go
+[*.go]
+indent_style = tab
+max_line_length = 100
+
+# Rust
+[*.rs]
+indent_style = space
+indent_size = 4
+max_line_length = 100
+
+# SQL
+[*.sql]
+indent_size = 4
+max_line_length = 120
+
+# HTML
+[*.{html,htm}]
+indent_size = 2
+max_line_length = 120
+
+# CSS
+[*.{css,scss,sass}]
+indent_size = 2
+max_line_length = 120
 
 # Ignore paths
 [{node_modules,vendor,build,dist,temp}/**]

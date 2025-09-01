@@ -18,6 +18,7 @@ This document provides comprehensive API documentation for the project template.
 ## Overview
 
 ### Base URL
+
 ```
 Production: https://api.yourdomain.com
 Staging: https://api-staging.yourdomain.com
@@ -25,11 +26,13 @@ Development: http://localhost:3000
 ```
 
 ### Content Types
+
 - **Request**: `application/json`
 - **Response**: `application/json`
 - **File Upload**: `multipart/form-data`
 
 ### Response Format
+
 ```json
 {
   "success": true,
@@ -41,6 +44,7 @@ Development: http://localhost:3000
 ```
 
 ### Error Response Format
+
 ```json
 {
   "success": false,
@@ -62,6 +66,7 @@ Development: http://localhost:3000
 ### JWT Token Authentication
 
 #### Login
+
 ```http
 POST /api/auth/login
 Content-Type: application/json
@@ -73,6 +78,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -95,12 +101,14 @@ Content-Type: application/json
 ```
 
 #### Refresh Token
+
 ```http
 POST /api/auth/refresh
 Authorization: Bearer <refresh_token>
 ```
 
 #### Logout
+
 ```http
 POST /api/auth/logout
 Authorization: Bearer <access_token>
@@ -109,6 +117,7 @@ Authorization: Bearer <access_token>
 ### API Key Authentication
 
 For service-to-service communication:
+
 ```http
 GET /api/service/data
 X-API-Key: your-api-key-here
@@ -117,11 +126,13 @@ X-API-Key: your-api-key-here
 ## Core Endpoints
 
 ### Health Check
+
 ```http
 GET /health
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -135,12 +146,14 @@ GET /health
 ```
 
 ### Application Status
+
 ```http
 GET /api/status
 Authorization: Bearer <token>
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -158,6 +171,7 @@ Authorization: Bearer <token>
 ```
 
 ### Metrics Endpoint
+
 ```http
 GET /metrics
 Authorization: Bearer <admin_token>
@@ -168,12 +182,14 @@ Returns Prometheus-compatible metrics for monitoring.
 ## User Management
 
 ### Get User Profile
+
 ```http
 GET /api/user/profile
 Authorization: Bearer <token>
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -198,6 +214,7 @@ Authorization: Bearer <token>
 ```
 
 ### Update User Profile
+
 ```http
 PUT /api/user/profile
 Authorization: Bearer <token>
@@ -214,6 +231,7 @@ Content-Type: application/json
 ```
 
 ### Change Password
+
 ```http
 POST /api/user/change-password
 Authorization: Bearer <token>
@@ -227,6 +245,7 @@ Content-Type: application/json
 ```
 
 ### Delete Account
+
 ```http
 DELETE /api/user/account
 Authorization: Bearer <token>
@@ -235,12 +254,14 @@ Authorization: Bearer <token>
 ## Data Operations
 
 ### List Items
+
 ```http
 GET /api/data?page=1&limit=10&sort=createdAt&order=desc&search=query
 Authorization: Bearer <token>
 ```
 
 **Query Parameters:**
+
 - `page`: Page number (default: 1)
 - `limit`: Items per page (default: 10, max: 100)
 - `sort`: Sort field (default: createdAt)
@@ -249,6 +270,7 @@ Authorization: Bearer <token>
 - `filter`: JSON filter object
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -275,12 +297,14 @@ Authorization: Bearer <token>
 ```
 
 ### Get Single Item
+
 ```http
 GET /api/data/{id}
 Authorization: Bearer <token>
 ```
 
 ### Create Item
+
 ```http
 POST /api/data
 Authorization: Bearer <token>
@@ -295,6 +319,7 @@ Content-Type: application/json
 ```
 
 ### Update Item
+
 ```http
 PUT /api/data/{id}
 Authorization: Bearer <token>
@@ -307,12 +332,14 @@ Content-Type: application/json
 ```
 
 ### Delete Item
+
 ```http
 DELETE /api/data/{id}
 Authorization: Bearer <token>
 ```
 
 ### Bulk Operations
+
 ```http
 POST /api/data/bulk
 Authorization: Bearer <token>
@@ -327,6 +354,7 @@ Content-Type: application/json
 ## File Operations
 
 ### Upload File
+
 ```http
 POST /api/upload
 Authorization: Bearer <token>
@@ -338,6 +366,7 @@ Content-Type: multipart/form-data
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -354,24 +383,28 @@ Content-Type: multipart/form-data
 ```
 
 ### Get File Info
+
 ```http
 GET /api/files/{id}
 Authorization: Bearer <token>
 ```
 
 ### Download File
+
 ```http
 GET /api/files/{id}/download
 Authorization: Bearer <token>
 ```
 
 ### Delete File
+
 ```http
 DELETE /api/files/{id}
 Authorization: Bearer <token>
 ```
 
 ### List Files
+
 ```http
 GET /api/files?page=1&limit=20&type=document
 Authorization: Bearer <token>
@@ -380,12 +413,14 @@ Authorization: Bearer <token>
 ## Monitoring
 
 ### Application Metrics
+
 ```http
 GET /metrics
 Authorization: Bearer <admin_token>
 ```
 
 Returns Prometheus metrics:
+
 ```
 # HELP http_requests_total Total number of HTTP requests
 # TYPE http_requests_total counter
@@ -397,6 +432,7 @@ http_request_duration_seconds_bucket{method="GET",endpoint="/api/data",le="0.1"}
 ```
 
 ### Health Checks
+
 ```http
 GET /health/ready
 GET /health/live
@@ -404,12 +440,14 @@ GET /health/deep
 ```
 
 ### System Information
+
 ```http
 GET /api/system/info
 Authorization: Bearer <admin_token>
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -438,34 +476,34 @@ Authorization: Bearer <admin_token>
 
 ### HTTP Status Codes
 
-| Code | Meaning | Description |
-|------|---------|-------------|
-| 200 | OK | Request successful |
-| 201 | Created | Resource created |
-| 204 | No Content | Request successful, no content returned |
-| 400 | Bad Request | Invalid request data |
-| 401 | Unauthorized | Authentication required |
-| 403 | Forbidden | Insufficient permissions |
-| 404 | Not Found | Resource not found |
-| 409 | Conflict | Resource conflict |
-| 422 | Unprocessable Entity | Validation failed |
-| 429 | Too Many Requests | Rate limit exceeded |
-| 500 | Internal Server Error | Server error |
-| 502 | Bad Gateway | Gateway error |
-| 503 | Service Unavailable | Service temporarily unavailable |
+| Code | Meaning               | Description                             |
+| ---- | --------------------- | --------------------------------------- |
+| 200  | OK                    | Request successful                      |
+| 201  | Created               | Resource created                        |
+| 204  | No Content            | Request successful, no content returned |
+| 400  | Bad Request           | Invalid request data                    |
+| 401  | Unauthorized          | Authentication required                 |
+| 403  | Forbidden             | Insufficient permissions                |
+| 404  | Not Found             | Resource not found                      |
+| 409  | Conflict              | Resource conflict                       |
+| 422  | Unprocessable Entity  | Validation failed                       |
+| 429  | Too Many Requests     | Rate limit exceeded                     |
+| 500  | Internal Server Error | Server error                            |
+| 502  | Bad Gateway           | Gateway error                           |
+| 503  | Service Unavailable   | Service temporarily unavailable         |
 
 ### Error Codes
 
-| Code | HTTP Status | Description |
-|------|-------------|-------------|
-| `VALIDATION_ERROR` | 400 | Input validation failed |
-| `AUTHENTICATION_ERROR` | 401 | Authentication failed |
-| `AUTHORIZATION_ERROR` | 403 | Insufficient permissions |
-| `NOT_FOUND` | 404 | Resource not found |
-| `CONFLICT` | 409 | Resource conflict |
-| `RATE_LIMIT_EXCEEDED` | 429 | Rate limit exceeded |
-| `INTERNAL_ERROR` | 500 | Internal server error |
-| `SERVICE_UNAVAILABLE` | 503 | Service temporarily unavailable |
+| Code                   | HTTP Status | Description                     |
+| ---------------------- | ----------- | ------------------------------- |
+| `VALIDATION_ERROR`     | 400         | Input validation failed         |
+| `AUTHENTICATION_ERROR` | 401         | Authentication failed           |
+| `AUTHORIZATION_ERROR`  | 403         | Insufficient permissions        |
+| `NOT_FOUND`            | 404         | Resource not found              |
+| `CONFLICT`             | 409         | Resource conflict               |
+| `RATE_LIMIT_EXCEEDED`  | 429         | Rate limit exceeded             |
+| `INTERNAL_ERROR`       | 500         | Internal server error           |
+| `SERVICE_UNAVAILABLE`  | 503         | Service temporarily unavailable |
 
 ### Validation Errors
 
@@ -522,19 +560,20 @@ X-RateLimit-Retry-After: 60
 
 ### Rate Limits by Endpoint
 
-| Endpoint | Limit | Window |
-|----------|-------|--------|
-| `/api/auth/*` | 10 | 1 minute |
-| `/api/data` | 100 | 1 minute |
-| `/api/upload` | 20 | 1 hour |
-| `/api/user/*` | 50 | 1 minute |
-| All others | 1000 | 1 minute |
+| Endpoint      | Limit | Window   |
+| ------------- | ----- | -------- |
+| `/api/auth/*` | 10    | 1 minute |
+| `/api/data`   | 100   | 1 minute |
+| `/api/upload` | 20    | 1 hour   |
+| `/api/user/*` | 50    | 1 minute |
+| All others    | 1000  | 1 minute |
 
 ## API Versions
 
 ### Versioning Strategy
 
 API versions are indicated in the URL path:
+
 ```
 /api/v1/endpoint
 /api/v2/endpoint
@@ -563,14 +602,14 @@ X-API-Version: 1
 
 ```javascript
 // Client-side version detection
-const apiVersion = 'v1';
+const apiVersion = "v1";
 const baseURL = `https://api.example.com/api/${apiVersion}`;
 ```
 
 ```javascript
 // Server-side version handling
-app.use('/api/v1', v1Routes);
-app.use('/api/v2', v2Routes);
+app.use("/api/v1", v1Routes);
+app.use("/api/v2", v2Routes);
 ```
 
 ## SDKs and Libraries
@@ -578,15 +617,15 @@ app.use('/api/v2', v2Routes);
 ### JavaScript SDK
 
 ```javascript
-import { APIClient } from '@yourproject/sdk';
+import { APIClient } from "@yourproject/sdk";
 
 const client = new APIClient({
-  baseURL: 'https://api.yourdomain.com',
-  apiKey: 'your-api-key'
+  baseURL: "https://api.yourdomain.com",
+  apiKey: "your-api-key",
 });
 
 // Authenticate
-await client.auth.login('user@example.com', 'password');
+await client.auth.login("user@example.com", "password");
 
 // Make requests
 const user = await client.user.getProfile();
@@ -646,15 +685,15 @@ Content-Type: application/json
 
 ### Webhook Events
 
-| Event | Description |
-|-------|-------------|
-| `user.created` | New user account created |
-| `user.updated` | User profile updated |
-| `user.deleted` | User account deleted |
-| `data.created` | New data record created |
-| `data.updated` | Data record updated |
-| `data.deleted` | Data record deleted |
-| `file.uploaded` | File uploaded |
-| `file.deleted` | File deleted |
+| Event           | Description              |
+| --------------- | ------------------------ |
+| `user.created`  | New user account created |
+| `user.updated`  | User profile updated     |
+| `user.deleted`  | User account deleted     |
+| `data.created`  | New data record created  |
+| `data.updated`  | Data record updated      |
+| `data.deleted`  | Data record deleted      |
+| `file.uploaded` | File uploaded            |
+| `file.deleted`  | File deleted             |
 
 This API documentation provides a comprehensive reference for integrating with the application. For additional support or questions, please contact the development team.

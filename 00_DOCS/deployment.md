@@ -27,12 +27,14 @@ Before deploying, ensure you have:
 ### 1. Server Requirements
 
 **Minimum Requirements:**
+
 - 2 CPU cores
 - 4GB RAM
 - 20GB storage
 - Ubuntu 20.04+ or similar Linux distribution
 
 **Recommended for Production:**
+
 - 4 CPU cores
 - 8GB RAM
 - 50GB SSD storage
@@ -123,6 +125,7 @@ docker-compose up -d app-canary
 ### GitHub Actions Setup
 
 1. **Configure Secrets:**
+
    ```bash
    # Repository Settings > Secrets and variables > Actions
    STAGING_HOST=your-staging-server.com
@@ -231,6 +234,7 @@ docker-compose up -d
 ### Common Issues
 
 #### Application Won't Start
+
 ```bash
 # Check logs
 docker-compose logs app
@@ -243,6 +247,7 @@ docker-compose exec app npm run db:test
 ```
 
 #### Database Connection Issues
+
 ```bash
 # Check database status
 docker-compose ps db
@@ -256,6 +261,7 @@ docker-compose exec db createdb -U user myproject_db
 ```
 
 #### High Memory Usage
+
 ```bash
 # Check container resource usage
 docker stats
@@ -272,6 +278,7 @@ services:
 ```
 
 #### SSL Certificate Issues
+
 ```bash
 # Check certificate validity
 openssl x509 -in /etc/ssl/certs/cert.pem -text -noout
@@ -286,6 +293,7 @@ docker-compose exec nginx nginx -s reload
 ### Performance Optimization
 
 #### Database Tuning
+
 ```sql
 -- Analyze query performance
 EXPLAIN ANALYZE SELECT * FROM users WHERE email = 'test@example.com';
@@ -296,12 +304,13 @@ CREATE INDEX idx_users_created_at ON users(created_at);
 ```
 
 #### Application Optimization
+
 ```javascript
 // Enable gzip compression
 app.use(compression());
 
 // Cache static assets
-app.use(express.static('public', { maxAge: '1y' }));
+app.use(express.static("public", { maxAge: "1y" }));
 
 // Database connection pooling
 const pool = new Pool({
@@ -313,6 +322,7 @@ const pool = new Pool({
 ### Backup Strategy
 
 #### Automated Backups
+
 ```bash
 # Database backup script
 #!/bin/bash
@@ -326,6 +336,7 @@ find $BACKUP_DIR -name "backup_*.sql" -mtime +7 -delete
 ```
 
 #### Backup Verification
+
 ```bash
 # Test backup restoration
 docker-compose exec db createdb -U user test_restore
@@ -336,6 +347,7 @@ docker-compose exec db dropdb -U user test_restore
 ## Security Considerations
 
 ### Production Security
+
 - Use strong, unique passwords
 - Enable SSL/TLS for all connections
 - Regularly update dependencies
@@ -344,6 +356,7 @@ docker-compose exec db dropdb -U user test_restore
 - Use secrets management (Vault, AWS Secrets Manager)
 
 ### Network Security
+
 ```bash
 # Configure firewall
 sudo ufw default deny incoming

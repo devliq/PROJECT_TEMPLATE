@@ -626,3 +626,35 @@ result-*
 *.odp
 *.rtf
 *.tex
+
+# =============================================================================
+# PROJECT TEMPLATE SPECIFIC
+# =============================================================================
+# Source logs
+src/**/*.log
+# Test temp files
+test/**/*.tmp
+# Build artifacts
+03_BUILD/**
+# Deploy logs
+04_DEPLOY/**/*.log
+# Assets cache
+05_ASSETS/cache/
+# Config secrets
+06_CONFIG/**/*.secret
+# Scripts logs
+07_SCRIPT/**/*.log
+# Docs build
+00_DOCS/_build/
+# Terraform state
+04_DEPLOY/terraform/.terraform/
+# Grafana temp
+06_CONFIG/grafana/dashboards/*.tmp
+# Prometheus temp
+06_CONFIG/prometheus/*.tmp
+# Loki temp
+06_CONFIG/loki-config.yaml.tmp
+# Promtail temp
+06_CONFIG/promtail-config.yaml.tmp
+# Alerting temp
+06_CONFIG/alerting_rules.yml.tmp

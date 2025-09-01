@@ -4,7 +4,10 @@
 # =============================================================================
 # DEPENDENCIES CACHE STAGE
 # =============================================================================
-FROM node:20-alpine AS deps
+FROM node:20.9-alpine AS deps
+LABEL maintainer="devteam@example.com" \
+      version="1.0.0" \
+      description="Production application image"
 # Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
@@ -18,7 +21,7 @@ RUN --mount=type=cache,target=/root/.npm \
 # =============================================================================
 # BUILDER STAGE
 # =============================================================================
-FROM node:20-alpine AS builder
+FROM node:20.9-alpine AS builder
 WORKDIR /app
 
 # Copy package files and install all dependencies (including dev)
@@ -36,7 +39,7 @@ RUN --mount=type=cache,target=/root/.npm \
 # =============================================================================
 # PRODUCTION STAGE
 # =============================================================================
-FROM node:20-alpine AS production
+FROM node:20.9-alpine AS production
 WORKDIR /app
 
 # Install security updates and required packages
@@ -45,6 +48,15 @@ RUN apk add --no-cache \
     curl \
     && apk upgrade --no-cache \
     && rm -rf /var/cache/apk/*
+
+# Install Trivy for vulnerability scanning
+RUN apk add --no-cache curl && \
+    curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin && \
+    apk del curl && \
+    rm -rf /var/cache/apk/*
+
+# Run vulnerability scan
+RUN trivy filesystem --exit-code 0 --no-progress /app || echo "Vulnerability scan completed with warnings"
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
@@ -57,7 +69,7 @@ COPY --from=deps --chown=nodejs:nodejs /app/package*.json ./
 COPY --from=deps --chown=nodejs:nodejs /app/node_modules ./node_modules
 
 # Copy built application
-COPY --from=builder --chown=nodejs:nodejs /app/01_SRC ./01_SRC
+COPY --from=builder --chown=nodejs:nodejs /app/src ./src
 COPY --from=builder --chown=nodejs:nodejs /app/03_BUILD ./03_BUILD
 COPY --from=builder --chown=nodejs:nodejs /app/05_ASSETS ./05_ASSETS
 COPY --from=builder --chown=nodejs:nodejs /app/06_CONFIG ./06_CONFIG

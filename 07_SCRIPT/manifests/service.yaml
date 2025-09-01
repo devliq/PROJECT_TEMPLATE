@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: myproject-service-{{ENVIRONMENT}}
+  labels:
+    app: myproject
+    environment: {{ENVIRONMENT}}
+spec:
+  selector:
+    app: myproject
+    environment: {{ENVIRONMENT}}
+  ports:
+  - port: {{SERVICE_PORT}}
+    targetPort: {{CONTAINER_PORT}}
+    protocol: TCP
+  type: {{SERVICE_TYPE}}

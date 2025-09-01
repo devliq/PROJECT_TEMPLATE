@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myproject-app-{{ENVIRONMENT}}
+  labels:
+    app: myproject
+    environment: {{ENVIRONMENT}}
+    deployment: {{DEPLOYMENT_NAME}}
+spec:
+  replicas: {{REPLICAS}}
+  selector:
+    matchLabels:
+      app: myproject
+      environment: {{ENVIRONMENT}}
+  template:
+    metadata:
+      labels:
+        app: myproject
+        environment: {{ENVIRONMENT}}
+        deployment: {{DEPLOYMENT_NAME}}
+    spec:
+      containers:
+      - name: app
+        image: "{{IMAGE_NAME}}:{{DEPLOYMENT_NAME}}"
+        ports:
+        - containerPort: {{CONTAINER_PORT}}
+        env:
+        - name: NODE_ENV
+          value: "{{ENVIRONMENT}}"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: myproject-secrets
+              key: database-url
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: myproject-secrets
+              key: redis-url
+        resources:
+          requests:
+            memory: "{{MEMORY_REQUEST}}"
+            cpu: "{{CPU_REQUEST}}"
+          limits:
+            memory: "{{MEMORY_LIMIT}}"
+            cpu: "{{CPU_LIMIT}}"
+        livenessProbe:
+          httpGet:
+            path: {{HEALTH_PATH}}
+            port: {{CONTAINER_PORT}}
+          initialDelaySeconds: {{LIVENESS_DELAY}}
+          periodSeconds: {{LIVENESS_PERIOD}}
+        readinessProbe:
+          httpGet:
+            path: {{HEALTH_PATH}}
+            port: {{CONTAINER_PORT}}
+          initialDelaySeconds: {{READINESS_DELAY}}
+          periodSeconds: {{READINESS_PERIOD}}

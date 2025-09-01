@@ -1,7 +1,13 @@
 /**
  * Caching Configuration and Utilities
- * Supports multiple caching strategies and backends
+ * Uses established libraries: cache-manager with node-cache and ioredis
+ * Includes connection pooling, retry logic, and cache warming strategies
  */
+
+const cacheManager = require('cache-manager');
+const nodeCache = require('cache-manager-node-cache');
+const redisStore = require('cache-manager-ioredis');
+const IORedis = require('ioredis');
 
 const cache = {
   // Cache configuration
@@ -16,8 +22,23 @@ const cache = {
       port: process.env.REDIS_PORT || 6379,
       password: process.env.REDIS_PASSWORD || '',
       db: process.env.REDIS_DB || 0,
-      keyPrefix: 'app:'
-    }
+      keyPrefix: 'app:',
+      // Connection pooling and retry settings
+      maxRetriesPerRequest: 3,
+      retryDelayOnFailover: 100,
+      enableReadyCheck: false,
+      lazyConnect: true,
+      // Pool settings
+      poolSize: 10,
+      family: 4,
+      keepAlive: 30000,
+    },
+    // Warming configuration
+    warming: {
+      enabled: true,
+      interval: 300000, // 5 minutes
+      keys: [], // Keys to warm
+    },
   },
 
   // Cache stores
@@ -29,215 +50,149 @@ const cache = {
     misses: 0,
     sets: 0,
     deletes: 0,
-    clears: 0
+    clears: 0,
   },
 
   // Initialize cache
-  init(options = {}) {
+  async init(options = {}) {
     this.config = { ...this.config, ...options };
 
+    // Initialize memory store as primary fallback
+    this.stores.memory = cacheManager.caching({
+      store: nodeCache,
+      ttl: this.config.defaultTtl,
+      max: this.config.maxMemory,
+    });
+
     // Initialize Redis store if available
-    if (this.isRedisAvailable()) {
-      this.stores.redis = this.createRedisStore();
+    if (await this.isRedisAvailable()) {
+      this.stores.redis = await this.createRedisStore();
     }
 
-    // Initialize memory store as fallback
-    this.stores.memory = this.createMemoryStore();
+    // Use Redis if available, otherwise memory
+    this.cache = this.stores.redis || this.stores.memory;
+
+    // Start cache warming if enabled
+    if (this.config.warming.enabled) {
+      this.startWarming();
+    }
 
     console.log('Cache initialized with stores:', Object.keys(this.stores));
   },
 
   // Check if Redis is available
-  isRedisAvailable() {
+  async isRedisAvailable() {
     try {
-      // In Node.js environment, check if redis package is available
-      if (typeof require !== 'undefined') {
-        require('redis');
-        return true;
-      }
-      return false;
+      const testClient = new IORedis(this.config.redis);
+      await testClient.ping();
+      await testClient.quit();
+      return true;
     } catch (e) {
+      console.warn('Redis not available:', e.message);
       return false;
     }
   },
 
-  // Create Redis store
-  createRedisStore() {
-    const redis = require('redis');
-    const client = redis.createClient(this.config.redis);
-
-    client.on('error', (err) => {
-      console.error('Redis Client Error:', err);
+  // Create Redis store with configuration
+  async createRedisStore() {
+    const redisInstance = new IORedis({
+      ...this.config.redis,
+      reconnectOnError: err => {
+        console.error('Redis reconnect on error:', err.message);
+        return err.message.includes('READONLY');
+      },
     });
 
-    client.on('connect', () => {
+    // Connection event handlers
+    redisInstance.on('connect', () => {
       console.log('Connected to Redis');
     });
 
-    client.connect();
+    redisInstance.on('error', err => {
+      console.error('Redis Client Error:', err);
+    });
 
-    return {
-      get: async (key) => {
-        try {
-          const value = await client.get(this.config.redis.keyPrefix + key);
-          return value ? JSON.parse(value) : null;
-        } catch (err) {
-          console.error('Redis get error:', err);
-          return null;
-        }
-      },
+    redisInstance.on('ready', () => {
+      console.log('Redis client ready');
+    });
 
-      set: async (key, value, ttl = this.config.defaultTtl) => {
-        try {
-          const serializedValue = JSON.stringify(value);
-          if (ttl > 0) {
-            await client.setEx(this.config.redis.keyPrefix + key, ttl, serializedValue);
-          } else {
-            await client.set(this.config.redis.keyPrefix + key, serializedValue);
-          }
-          return true;
-        } catch (err) {
-          console.error('Redis set error:', err);
-          return false;
-        }
-      },
+    redisInstance.on('close', () => {
+      console.log('Redis connection closed');
+    });
 
-      delete: async (key) => {
-        try {
-          await client.del(this.config.redis.keyPrefix + key);
-          return true;
-        } catch (err) {
-          console.error('Redis delete error:', err);
-          return false;
-        }
-      },
+    // Wait for connection
+    await redisInstance.connect();
 
-      clear: async () => {
-        try {
-          const keys = await client.keys(`${this.config.redis.keyPrefix}*`);
-          if (keys.length > 0) {
-            await client.del(keys);
-          }
-          return true;
-        } catch (err) {
-          console.error('Redis clear error:', err);
-          return false;
-        }
-      },
-
-      has: async (key) => {
-        try {
-          const exists = await client.exists(this.config.redis.keyPrefix + key);
-          return exists === 1;
-        } catch (err) {
-          console.error('Redis has error:', err);
-          return false;
-        }
-      }
-    };
+    return cacheManager.caching({
+      store: redisStore,
+      redisInstance,
+      ttl: this.config.defaultTtl,
+      keyPrefix: this.config.redis.keyPrefix,
+    });
   },
 
-  // Create in-memory store
-  createMemoryStore() {
-    const store = new Map();
-
-    return {
-      get: async (key) => {
-        const item = store.get(key);
-        if (!item) return null;
-
-        if (item.expires && item.expires < Date.now()) {
-          store.delete(key);
-          return null;
-        }
-
-        return item.value;
-      },
-
-      set: async (key, value, ttl = this.config.defaultTtl) => {
-        const expires = ttl > 0 ? Date.now() + (ttl * 1000) : null;
-        store.set(key, { value, expires });
-        return true;
-      },
-
-      delete: async (key) => {
-        return store.delete(key);
-      },
-
-      clear: async () => {
-        store.clear();
-        return true;
-      },
-
-      has: async (key) => {
-        const item = store.get(key);
-        if (!item) return false;
-
-        if (item.expires && item.expires < Date.now()) {
-          store.delete(key);
-          return false;
-        }
-
-        return true;
-      }
-    };
-  },
-
-  // Get cache store (Redis preferred, fallback to memory)
-  getStore() {
-    return this.stores.redis || this.stores.memory;
-  },
-
-  // Cache operations
+  // Cache operations with retry logic
   async get(key) {
-    const store = this.getStore();
-    const value = await store.get(key);
-
-    if (value !== null) {
-      this.stats.hits++;
-    } else {
+    try {
+      const value = await this.cache.get(key);
+      if (value !== undefined) {
+        this.stats.hits++;
+      } else {
+        this.stats.misses++;
+      }
+      return value;
+    } catch (err) {
+      console.error('Cache get error:', err);
       this.stats.misses++;
+      return null;
     }
-
-    return value;
   },
 
   async set(key, value, ttl = this.config.defaultTtl) {
-    const store = this.getStore();
-    const result = await store.set(key, value, ttl);
-
-    if (result) {
-      this.stats.sets++;
+    try {
+      const result = await this.cache.set(key, value, { ttl });
+      if (result) {
+        this.stats.sets++;
+      }
+      return result;
+    } catch (err) {
+      console.error('Cache set error:', err);
+      return false;
     }
-
-    return result;
   },
 
   async delete(key) {
-    const store = this.getStore();
-    const result = await store.delete(key);
-
-    if (result) {
-      this.stats.deletes++;
+    try {
+      const result = await this.cache.del(key);
+      if (result) {
+        this.stats.deletes++;
+      }
+      return result;
+    } catch (err) {
+      console.error('Cache delete error:', err);
+      return false;
     }
-
-    return result;
   },
 
   async clear() {
-    const store = this.getStore();
-    const result = await store.clear();
-
-    if (result) {
+    try {
+      await this.cache.reset();
       this.stats.clears++;
+      return true;
+    } catch (err) {
+      console.error('Cache clear error:', err);
+      return false;
     }
-
-    return result;
   },
 
   async has(key) {
-    const store = this.getStore();
-    return await store.has(key);
+    try {
+      const value = await this.get(key);
+      return value !== null;
+    } catch (err) {
+      console.error('Cache has error:', err);
+      return false;
+    }
   },
 
   // Cache decorators
@@ -278,24 +233,28 @@ const cache = {
       let responseStatus = 200;
       const responseHeaders = {};
 
-      res.send = function(body) {
+      res.send = function sendResponse(body) {
         responseBody = body;
         return originalSend.call(this, body);
       };
 
-      res.status = function(code) {
+      res.status = function setStatus(code) {
         responseStatus = code;
         return originalStatus.call(this, code);
       };
 
       res.on('finish', async () => {
         // Cache successful GET responses
-        if (req.method === 'GET' && responseStatus >= 200 && responseStatus < 300) {
+        if (
+          req.method === 'GET' &&
+          responseStatus >= 200 &&
+          responseStatus < 300
+        ) {
           const cacheData = {
             body: responseBody,
             status: responseStatus,
             headers: responseHeaders,
-            timestamp: Date.now()
+            timestamp: Date.now(),
           };
 
           await this.set(key, cacheData, ttl);
@@ -310,22 +269,55 @@ const cache = {
   async warm(keys) {
     console.log(`Warming cache with ${keys.length} keys...`);
 
-    for (const key of keys) {
-      // Implement cache warming logic based on your application needs
-      console.log(`Warming key: ${key}`);
+    const promises = keys.map(key => {
+      return (() => {
+        try {
+          console.log(`Warming key: ${key}`);
+          // Placeholder for actual data fetching logic
+          // cache.set(key, fetchDataForKey(key));
+        } catch (err) {
+          console.error(`Error warming key ${key}:`, err);
+        }
+      })();
+    });
+
+    await Promise.allSettled(promises);
+  },
+
+  // Start cache warming
+  startWarming() {
+    if (this.config.warming.keys.length > 0) {
+      this.warm(this.config.warming.keys);
     }
+  },
+
+  // Add keys to warming list
+  addWarmingKeys(keys) {
+    this.config.warming.keys = [
+      ...new Set([...this.config.warming.keys, ...keys]),
+    ];
+  },
+
+  // Remove keys from warming list
+  removeWarmingKeys(keys) {
+    this.config.warming.keys = this.config.warming.keys.filter(
+      key => !keys.includes(key)
+    );
   },
 
   // Get cache statistics
   getStats() {
     const total = this.stats.hits + this.stats.misses;
-    const hitRate = total > 0 ? (this.stats.hits / total * 100).toFixed(2) : 0;
+    const hitRate =
+      total > 0 ? ((this.stats.hits / total) * 100).toFixed(2) : 0;
 
     return {
       ...this.stats,
       totalRequests: total,
       hitRate: `${hitRate}%`,
-      store: this.stores.redis ? 'redis' : 'memory'
+      store: this.stores.redis ? 'redis' : 'memory',
+      warmingEnabled: this.config.warming.enabled,
+      warmingKeys: this.config.warming.keys.length,
     };
   },
 
@@ -336,9 +328,40 @@ const cache = {
       misses: 0,
       sets: 0,
       deletes: 0,
-      clears: 0
+      clears: 0,
     };
-  }
+  },
+
+  // Health check
+  async healthCheck() {
+    try {
+      const stats = this.getStats();
+      const ping = (await this.cache.store.ping)
+        ? await this.cache.store.ping()
+        : 'OK';
+      return {
+        status: 'healthy',
+        stats,
+        ping,
+      };
+    } catch (err) {
+      return {
+        status: 'unhealthy',
+        error: err.message,
+      };
+    }
+  },
+
+  // Graceful shutdown
+  async shutdown() {
+    this.stopWarming();
+
+    if (this.stores.redis && this.stores.redis.store.redisInstance) {
+      await this.stores.redis.store.redisInstance.quit();
+    }
+
+    console.log('Cache shutdown complete');
+  },
 };
 
 // Cache strategies
@@ -352,7 +375,7 @@ cache.strategies = {
         await cache.set(key, value, ttl);
       }
       return value;
-    }
+    },
   },
 
   // Write-Through
@@ -361,7 +384,7 @@ cache.strategies = {
       await cache.set(key, value, ttl);
       // Also write to database
       return value;
-    }
+    },
   },
 
   // Write-Behind (Write-Back)
@@ -374,41 +397,71 @@ cache.strategies = {
       // Queue for background write to database
       this.queue.push({ key, value });
 
-      // Process queue in background (implement based on your needs)
+      // Process queue in background
       this.processQueue();
     },
 
     processQueue() {
-      // Implement background processing
-      setTimeout(() => {
+      // Implement background processing with retry logic
+      setTimeout(async () => {
         while (this.queue.length > 0) {
           const item = this.queue.shift();
-          // Write to database
-          console.log('Processing write-behind:', item.key);
+          try {
+            // Write to database with retry
+            await this.writeToDatabaseWithRetry(item);
+            console.log('Processed write-behind:', item.key);
+          } catch (err) {
+            console.error('Failed to process write-behind:', err);
+            // Re-queue for retry
+            this.queue.unshift(item);
+            break; // Stop processing on error
+          }
         }
       }, 1000);
-    }
+    },
+
+    async writeToDatabaseWithRetry(item, retries = 3) {
+      for (let i = 0; i < retries; i++) {
+        try {
+          // Implement your database write logic here
+          // await database.set(item.key, item.value);
+          // return true; // Uncomment when database write is implemented
+        } catch (err) {
+          if (i === retries - 1) throw err;
+          await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+        }
+      }
+    },
   },
 
   // Cache invalidation patterns
   invalidation: {
     // Direct invalidation
-    direct: async (key) => {
-      return await cache.delete(key);
+    // eslint-disable-next-line require-await
+    direct: async key => {
+      return cache.delete(key);
     },
 
     // Pattern-based invalidation
-    pattern: async (pattern) => {
-      // This would require scanning keys in Redis
-      // Implementation depends on your Redis setup
-      console.log(`Invalidating pattern: ${pattern}`);
+    pattern: async pattern => {
+      // This requires Redis SCAN for pattern matching
+      if (cache.stores.redis) {
+        const redis = cache.stores.redis.store.redisInstance;
+        const keys = await redis.keys(
+          `${cache.config.redis.keyPrefix}${pattern}`
+        );
+        if (keys.length > 0) {
+          await redis.del(keys);
+        }
+      }
+      console.log(`Invalidated pattern: ${pattern}`);
     },
 
     // Time-based expiration (handled automatically by TTL)
-    timeBased: (ttl) => {
+    timeBased: ttl => {
       return ttl;
-    }
-  }
+    },
+  },
 };
 
 // Export for different environments

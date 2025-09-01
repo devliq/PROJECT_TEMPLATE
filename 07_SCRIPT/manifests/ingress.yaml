@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: myproject-ingress-{{ENVIRONMENT}}
+  labels:
+    app: myproject
+    environment: {{ENVIRONMENT}}
+  annotations:
+    kubernetes.io/ingress.class: "{{INGRESS_CLASS}}"
+    cert-manager.io/cluster-issuer: "{{CERT_ISSUER}}"
+spec:
+  tls:
+  - hosts:
+    - {{DOMAIN}}
+    secretName: myproject-tls-{{ENVIRONMENT}}
+  rules:
+  - host: {{DOMAIN}}
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: myproject-service-{{ENVIRONMENT}}
+            port:
+              number: {{SERVICE_PORT}}

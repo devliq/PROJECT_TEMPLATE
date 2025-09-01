@@ -1,67 +1,83 @@
 # Project Makefile
 # Cross-platform development tasks
 
-.PHONY: help install build test clean deploy setup lint format docker-build docker-run
+.PHONY: help install build test clean deploy setup lint format docker-build docker-run validate
+
+# Configurable paths
+SCRIPT_DIR = 07_SCRIPT
+BUILD_DIR = 03_BUILD
+DEPLOY_DIR = 04_DEPLOY
+SRC_DIR = src
+TEST_DIR = test
 
 # Default target
 help: ## Show this help message
 	@echo "Available commands:"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-15s %s\n", $$1, $$2}'
 
+validate: ## Validate required files
+	@if [ ! -f "README.MD" ]; then \
+		echo "README.MD not found"; exit 1; \
+	fi
+	@if [ ! -f "package.json" ] && [ ! -f "requirements.txt" ] && [ ! -f "pom.xml" ]; then \
+		echo "No dependency file found"; exit 1; \
+	fi
+	@echo "Validation passed"
+
 # Setup and installation
 setup: ## Set up development environment
 	@echo "Setting up development environment..."
-	@if [ -f "07_SCRIPT/setup/setup.sh" ]; then \
-		bash 07_SCRIPT/setup/setup.sh; \
+	@if [ -f "$(SCRIPT_DIR)/setup/setup.sh" ]; then \
+		bash $(SCRIPT_DIR)/setup/setup.sh || { echo "Setup failed"; exit 1; }; \
 	else \
-		echo "Setup script not found"; \
+		echo "Setup script not found"; exit 1; \
 	fi
 
 install: ## Install dependencies
 	@echo "Installing dependencies..."
 	@if [ -f "package.json" ]; then \
-		npm install; \
+		npm install || exit 1; \
 	elif [ -f "requirements.txt" ]; then \
-		pip install -r requirements.txt; \
+		pip install -r requirements.txt || exit 1; \
 	elif [ -f "pom.xml" ]; then \
-		mvn dependency:resolve; \
+		mvn dependency:resolve || exit 1; \
 	else \
-		echo "No dependency file found"; \
+		echo "No dependency file found"; exit 1; \
 	fi
 
 # Development tasks
 build: ## Build the project
 	@echo "Building project..."
-	@if [ -f "07_SCRIPT/build/build.sh" ]; then \
-		bash 07_SCRIPT/build/build.sh; \
+	@if [ -f "$(SCRIPT_DIR)/build/build.sh" ]; then \
+		bash $(SCRIPT_DIR)/build/build.sh || { echo "Build failed"; exit 1; }; \
 	else \
-		echo "Build script not found"; \
+		echo "Build script not found"; exit 1; \
 	fi
 
 test: ## Run tests
 	@echo "Running tests..."
 	@if [ -f "package.json" ]; then \
-		npm test; \
+		npm test || exit 1; \
 	elif [ -f "requirements.txt" ]; then \
-		python -m pytest tests/ || python -m unittest discover tests/; \
+		python -m pytest tests/ || python -m unittest discover tests/ || exit 1; \
 	else \
-		echo "No test runner configured"; \
+		echo "No test runner configured"; exit 1; \
 	fi
 
 lint: ## Run linting
 	@echo "Running linter..."
 	@if [ -f "package.json" ]; then \
-		npm run lint; \
+		npm run lint || exit 1; \
 	else \
-		echo "No linter configured"; \
+		echo "No linter configured"; exit 1; \
 	fi
 
 format: ## Format code
 	@echo "Formatting code..."
 	@if [ -f "package.json" ]; then \
-		npm run format; \
+		npm run format || exit 1; \
 	else \
-		echo "No formatter configured"; \
+		echo "No formatter configured"; exit 1; \
 	fi
 
 # Docker tasks
@@ -84,10 +100,10 @@ docker-run: ## Run Docker container
 # Deployment
 deploy: ## Deploy to staging
 	@echo "Deploying to staging..."
-	@if [ -f "07_SCRIPT/deploy/deploy.sh" ]; then \
-		bash 07_SCRIPT/deploy/deploy.sh staging; \
+	@if [ -f "$(SCRIPT_DIR)/deploy/deploy.sh" ]; then \
+		bash $(SCRIPT_DIR)/deploy/deploy.sh staging || { echo "Deploy failed"; exit 1; }; \
 	else \
-		echo "Deploy script not found"; \
+		echo "Deploy script not found"; exit 1; \
 	fi
 
 deploy-prod: ## Deploy to production
@@ -144,7 +160,7 @@ dev: ## Start development server
 	fi
 
 # CI/CD simulation
-ci: install lint test build ## Run full CI pipeline locally
+ci: validate install lint test build ## Run full CI pipeline locally
 
 # Utility
 info: ## Show project information

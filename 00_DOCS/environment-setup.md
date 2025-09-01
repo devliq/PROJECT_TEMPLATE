@@ -15,16 +15,48 @@ This project template supports multiple approaches to environment management:
 
 ### For New Projects
 
-1. Run the setup script:
+1. Run the appropriate setup script for your platform:
+
+   **Linux/macOS:**
 
    ```bash
-   ./scripts/setup.sh
+   ./07_SCRIPT/setup.sh
    ```
+
+   **Windows + WSL + Docker (Recommended):**
+
+   ```powershell
+   # For complete Windows + WSL + Docker setup:
+   .\07_SCRIPT\setup-windows-wsl.ps1 -InstallWSL -InstallDocker -SetupEnvironment
+
+   # Or if you already have WSL/Docker installed:
+   .\07_SCRIPT\setup-windows-wsl.ps1 -SetupEnvironment
+   ```
+
+   **Windows (Basic PowerShell):**
+
+   ```powershell
+   .\07_SCRIPT\setup-windows.ps1 -InstallDirenv -SetupHooks
+   ```
+
+   **Development setup (includes Docker):**
+
+   ```bash
+   ./07_SCRIPT/setup-dev.sh
+   ```
+
+   **Ultimate setup (recommended for best operability):**
+
+   ```bash
+   ./07_SCRIPT/setup-ultimate.sh
+   ```
+
+   # This provides the most comprehensive cross-platform setup
 
 2. Choose your preferred environment method:
 
    ```bash
-   # Option 1: Direnv (automatic)
+   # Option 1: Direnv (automatic - recommended)
    direnv allow
 
    # Option 2: Nix shell
@@ -33,6 +65,232 @@ This project template supports multiple approaches to environment management:
    # Option 3: Nix flakes
    nix develop
    ```
+
+3. The environment will now load automatically when you enter the project directory!
+
+## Windows WSL + Docker Development
+
+For **Windows users who want to develop with WSL and Docker**, use this optimized workflow:
+
+### Quick Setup for Windows + WSL + Docker:
+
+```powershell
+# One command sets up everything:
+.\07_SCRIPT\setup-windows-wsl.ps1 -InstallWSL -InstallDocker -SetupEnvironment
+
+# Or if you already have WSL/Docker installed:
+.\07_SCRIPT\setup-windows-wsl.ps1 -SetupEnvironment
+```
+
+### What This Does:
+
+1. **Installs WSL2** - Windows Subsystem for Linux
+2. **Installs Docker CE in WSL** - Native Docker in your Linux environment
+3. **Sets up WSL environment** - Auto-detects your distribution and uses appropriate package manager
+4. **Configures direnv** - For automatic environment loading
+5. **Creates environment files** - .envrc and .env ready to use
+
+### Development Workflow:
+
+```powershell
+# From Windows PowerShell (RECOMMENDED - Fully Automated):
+.\Enter-Project.ps1
+
+# Alternative batch file:
+.\enter-project.bat
+
+# Manual entry (if you prefer):
+wsl  # Enter WSL
+cd /mnt/c/src/your-project
+
+# SSH entry (requires SSH server setup):
+ssh user@127.0.0.1 -p 2222
+```
+
+### Automated Entry Features:
+
+When using the automated scripts (`.ps1` or `.bat`):
+
+- ✅ **Automatic WSL Entry** - No manual `wsl` command needed
+- ✅ **Project Navigation** - Automatically navigates to project directory
+- ✅ **Environment Loading** - All direnv setup happens automatically
+- ✅ **Dependency Installation** - First-time setup runs automatically
+- ✅ **Docker Services** - Services start automatically
+- ✅ **Health Checks** - System validates everything is working
+- ✅ **Workspace Setup** - Optional development workspace creation
+
+### WSL Access Methods:
+
+**🏆 RECOMMENDED: Automated Entry Scripts**
+
+- ✅ **Fully Automated** - One command does everything
+- ✅ **No Manual Steps** - Handles WSL entry, navigation, and setup
+- ✅ **Error Handling** - Validates WSL availability and provides guidance
+- ✅ **Workspace Optional** - Can automatically set up development workspace
+
+**Alternative: `wsl` command**
+
+- ✅ Faster connection (instant)
+- ✅ No SSH server required
+- ✅ More reliable
+- ✅ Standard Microsoft approach
+
+**Alternative: SSH**
+
+- ⚠️ Requires SSH server in WSL
+- ⚠️ Slower connection
+- ⚠️ Additional configuration needed
+- ⚠️ May have network/firewall issues
+
+**Recommendation**: Use the automated entry scripts for the best experience!
+
+### Benefits:
+
+- ✅ **Native Windows experience** - Use VS Code, file explorer
+- ✅ **Linux development tools** - Full Linux environment (Ubuntu, Kali, Fedora, etc.)
+- ✅ **Docker in WSL** - Lightweight, no Docker Desktop overhead
+- ✅ **Automatic environment** - No manual setup required
+- ✅ **File system sync** - Windows ↔ WSL seamless
+- ✅ **No licensing concerns** - Uses open-source Docker CE
+- ✅ **Multi-distro support** - Works with any WSL distribution
+
+## Automatic Environment Features
+
+When you enter the project directory, the environment automatically:
+
+### 🚀 **First-Time Setup**
+
+- **Dependency Installation**: Automatically installs Node.js dependencies
+- **Directory Creation**: Creates necessary project directories (03_BUILD, 05_ASSETS, temp)
+- **Git Hooks Setup**: Configures Git hooks if available
+- **Environment Files**: Creates .env from template if needed
+
+### 🐳 **Docker Management**
+
+- **Auto-Start Services**: Automatically starts Docker containers on directory entry
+- **Service Health Checks**: Verifies database, Redis, and application services are running
+- **Smart Detection**: Only starts services if they're not already running
+
+### 🏥 **Health Monitoring**
+
+- **Tool Verification**: Checks that all required development tools are available
+- **Service Status**: Monitors Docker service health
+- **Application Testing**: Runs basic connectivity tests on common ports
+- **NPM Testing**: Executes test suite if available
+
+### 🔄 **Automatic Reloading**
+
+The environment automatically reloads when these files change:
+
+- `.env` - Environment variables
+- `docker-compose.yml` - Docker services
+- `package.json` - Node.js dependencies
+- `flake.nix` / `shell.nix` - Nix configuration
+- `.envrc` - Environment configuration
+
+### 📊 **Status Display**
+
+Shows comprehensive status information:
+
+- Platform and environment details
+- Setup completion status
+- Docker service status
+- Available commands and tips
+
+### Supported WSL Distributions:
+
+- **Ubuntu/Debian-based**: Ubuntu, Kali Linux, Debian
+- **Fedora/RHEL-based**: Fedora, CentOS, RHEL
+- **Arch Linux**: Manjaro, EndeavourOS
+
+## Ultimate Setup (Recommended)
+
+For the **best cross-platform operability**, use the ultimate setup script:
+
+```bash
+./07_SCRIPT/setup-ultimate.sh
+```
+
+### What the Ultimate Setup Provides
+
+**🔧 Automatic Tool Installation:**
+
+- Detects your platform (Linux/macOS/Windows/WSL)
+- Installs direnv automatically
+- Installs Nix with flakes support
+- Installs nix-direnv for optimal performance
+
+**🌐 Cross-Platform Compatibility:**
+
+- **Linux**: Uses apt/pacman/dnf package managers
+- **macOS**: Uses Homebrew
+- **Windows**: Supports Scoop/Chocolatey/native installation
+- **WSL**: Special handling for Windows Subsystem for Linux
+
+**⚙️ Smart Configuration:**
+
+- Auto-detects shell type (bash/zsh/fish/PowerShell)
+- Configures appropriate shell hooks
+- Creates optimized .envrc with Nix integration
+- Sets up directory structures dynamically
+
+**🛡️ Safety Features:**
+
+- Never overwrites existing .env files
+- Preserves user configuration
+- Graceful fallbacks for missing tools
+- Comprehensive error handling
+
+**📊 Status & Monitoring:**
+
+- Real-time installation progress
+- Verification of all components
+- Clear success/failure indicators
+- Troubleshooting guidance
+
+### Ultimate Setup Workflow
+
+```bash
+# One command sets up everything
+./07_SCRIPT/setup-ultimate.sh
+
+# Output shows:
+# • Platform detection
+# • Tool installation progress
+# • Configuration setup
+# • Verification results
+# • Next steps
+
+# Then simply:
+cd your-project  # Environment loads automatically
+```
+
+### Benefits of Ultimate Setup
+
+- ✅ **Zero manual configuration** - everything automated
+- ✅ **Maximum compatibility** - works on any platform
+- ✅ **Optimal performance** - uses nix-direnv caching
+- ✅ **Future-proof** - adapts to new tools/versions
+- ✅ **Safe** - preserves existing configuration
+- ✅ **Comprehensive** - handles edge cases and errors
+
+4. **Test your setup:**
+
+   **Linux/macOS:**
+
+   ```bash
+   ./07_SCRIPT/test-env.sh
+   ```
+
+   **Windows:**
+
+   ```batch
+   .\07_SCRIPT\test-env.bat
+   ```
+
+   # Or using bash directly:
+
+   bash 07_SCRIPT/test-env.sh
 
 ## Detailed Setup Instructions
 
@@ -71,6 +329,23 @@ nix-env -iA nixpkgs.direnv
 curl -sfL https://direnv.net/install.sh | bash
 ```
 
+**Windows:**
+
+```powershell
+# Using the provided setup script (recommended)
+.\07_SCRIPT\setup-windows.ps1 -InstallDirenv -SetupHooks
+
+# Or install manually via Scoop (recommended for Windows)
+scoop install direnv
+
+# Or via Chocolatey
+choco install direnv
+
+# Or manual installation
+# Download from: https://github.com/direnv/direnv/releases
+# Add to PATH and setup hooks as shown below
+```
+
 #### Shell Integration
 
 Add the direnv hook to your shell configuration:
@@ -91,6 +366,22 @@ eval "$(direnv hook zsh)"
 
 ```bash
 direnv hook fish | source
+```
+
+**PowerShell (Windows):**
+
+```powershell
+# Add to PowerShell profile ($PROFILE)
+if (Get-Command direnv -ErrorAction SilentlyContinue) {
+    Invoke-Expression "$(direnv hook pwsh)"
+}
+```
+
+**Windows Subsystem for Linux (WSL):**
+
+```bash
+# Add to ~/.bashrc in WSL
+eval "$(direnv hook bash)"
 ```
 
 #### Project Setup
@@ -402,16 +693,117 @@ nix upgrade-nix
 
 - Check `.env` file exists and has correct format
 - Run `direnv reload` to refresh
+- On Windows: Ensure PowerShell execution policy allows script execution
 
 **Nix commands not found:**
 
 - Ensure Nix is in PATH
 - Restart your shell after installation
+- On Windows: Check if Nix is properly installed in WSL
 
 **Package not found:**
 
 - Update flake inputs: `nix flake update`
 - Check package names in Nix files
+
+### Environment File Safety
+
+**`.env` file protection:**
+
+- All setup scripts check for existing `.env` files before copying
+- **Never overwrites** existing `.env` files
+- Only creates `.env` from template if it doesn't exist
+- Your custom configuration is always preserved
+
+**Example behavior:**
+
+```bash
+# First run - creates .env from template
+./setup.sh
+# Output: "✅ Created .env file from 06_CONFIG/.env.example"
+
+# Second run - preserves existing .env
+./setup.sh
+# Output: "📝 .env file already exists"
+```
+
+### Windows-Specific Issues
+
+**Direnv not working in PowerShell:**
+
+```powershell
+# Check if direnv is in PATH
+Get-Command direnv
+
+# Reload PowerShell profile
+. $PROFILE
+
+# Manually test direnv
+direnv allow .
+```
+
+**WSL integration issues:**
+
+```bash
+# Ensure WSL has access to Windows PATH (if needed)
+# Add to ~/.bashrc in WSL:
+export PATH="$PATH:/mnt/c/Windows/System32"
+
+# Test direnv in WSL
+direnv --version
+direnv allow .
+```
+
+**Direnv configuration directory issues:**
+
+```powershell
+# Create direnv config directory manually
+mkdir %USERPROFILE%\.config\direnv
+
+# Set environment variable
+setx DIRENV_CONFIG %USERPROFILE%\.config\direnv
+
+# Restart PowerShell and try again
+direnv allow .
+```
+
+**PowerShell execution policy issues:**
+
+```powershell
+# Check current execution policy
+Get-ExecutionPolicy
+
+# Set execution policy if needed
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+
+# Or run with bypass
+powershell -ExecutionPolicy Bypass -File .\07_SCRIPT\setup-windows.ps1
+```
+
+**Permission issues on Windows:**
+
+```powershell
+# Run PowerShell as Administrator
+# Or set execution policy
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+
+# For WSL, ensure .envrc has correct permissions
+chmod +x .envrc
+```
+
+**Path issues:**
+
+- Windows: Use forward slashes in .envrc files
+- WSL: Windows paths should use `/mnt/c/` format
+- Mixed environments: Be consistent with path separators
+
+**Nix installation issues on Windows:**
+
+````powershell
+# If Nix installation fails, try WSL approach:
+wsl --install
+# Then in WSL:
+curl -L https://nixos.org/nix/install | sh
 
 ## Advanced Configuration
 
@@ -427,7 +819,7 @@ pkgs.mkShell {
     another-tool
   ];
 }
-```
+````
 
 ### Environment-Specific Configurations
 
@@ -525,3 +917,64 @@ For issues with environment setup:
 3. Test with minimal configuration
 4. Check community resources
 5. Create issue with reproduction steps
+
+## Development Workspace (byobu/tmux)
+
+For an enhanced development experience with multiple windows and panes:
+
+### Setup Development Workspace:
+
+```bash
+# After entering the project directory, run:
+./07_SCRIPT/setup-dev-workspace.sh
+```
+
+### Workspace Layout:
+
+```
+Window 1: editor    - Main editing (split: files + editor)
+Window 2: server    - Development server (split: server + logs)
+Window 3: testing   - Testing & debugging (split: tests + results)
+Window 4: services  - Database & services (split: db + docker)
+Window 5: git       - Version control (split: status + log)
+```
+
+### Workspace Controls:
+
+```bash
+# Switch between windows: Ctrl-b + [1-5]
+# Switch between panes: Ctrl-b + [arrow keys]
+# Detach from session: Ctrl-b + d
+# Reattach to session: tmux attach -t dev-projectname
+# Or with byobu: byobu attach -t dev-projectname
+```
+
+### Benefits:
+
+- ✅ **Organized Workflow**: Dedicated windows for different tasks
+- ✅ **Persistent Sessions**: Survive terminal restarts
+- ✅ **Split Screen**: Multiple views in one window
+- ✅ **Session Sharing**: Can share sessions with team members
+- ✅ **Customizable**: Easy to modify layout for your needs
+
+### Requirements:
+
+```bash
+# Install byobu (recommended):
+sudo apt install byobu  # Ubuntu/Debian/Kali
+
+# Or install tmux:
+sudo apt install tmux   # Ubuntu/Debian/Kali
+```
+
+### First-Time Setup:
+
+```bash
+# Enable byobu:
+byobu-enable
+
+# Or configure tmux:
+tmux  # Start tmux, then Ctrl-b + : and type 'source-file ~/.tmux.conf'
+```
+
+The workspace script will automatically detect whether you have byobu or tmux installed and create the appropriate session.

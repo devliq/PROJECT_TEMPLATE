@@ -49,7 +49,7 @@ npm install my-project
 
 ```javascript
 // Example code
-const myProject = require('my-project');
+const myProject = require("my-project");
 myProject.doSomething();
 ```
 

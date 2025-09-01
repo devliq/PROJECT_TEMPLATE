@@ -72,8 +72,25 @@
       "commandInjection": "error",
       "pathTraversal": "error",
       "insecureRandom": "warn",
-      "weakCrypto": "warn"
+      "weakCrypto": "warn",
+      "deserialization": "error",
+      "hardcodedSecrets": "error",
+      "openRedirect": "error",
+      "csrf": "error"
     }
+  },
+
+  "remediation": {
+    "sqlInjection": "Use parameterized queries or ORM to prevent SQL injection",
+    "xss": "Sanitize user input and implement Content Security Policy (CSP)",
+    "commandInjection": "Validate and sanitize input, use safe APIs",
+    "pathTraversal": "Validate file paths, use allowlists",
+    "insecureRandom": "Use cryptographically secure random number generators",
+    "weakCrypto": "Use strong encryption algorithms and key sizes",
+    "deserialization": "Validate input data, use safe deserialization libraries",
+    "hardcodedSecrets": "Store secrets in environment variables or secure vaults",
+    "openRedirect": "Validate redirect URLs against allowlist",
+    "csrf": "Implement CSRF tokens and validate requests"
   },
 
   "monitoring": {
@@ -87,12 +104,26 @@
   },
 
   "compliance": {
-    "standards": ["OWASP Top 10", "NIST Cybersecurity Framework"],
+    "standards": [
+      "OWASP Top 10",
+      "NIST Cybersecurity Framework",
+      "ISO 27001",
+      "PCI DSS",
+      "HIPAA"
+    ],
     "requiredChecks": [
       "dependency_scanning",
       "secret_detection",
-      "code_analysis"
-    ]
+      "code_analysis",
+      "container_scanning",
+      "infrastructure_scanning"
+    ],
+    "reporting": {
+      "frequency": "monthly",
+      "format": ["json", "html", "pdf"],
+      "recipients": ["security@company.com"],
+      "automated": true
+    }
   },
 
   "reports": {

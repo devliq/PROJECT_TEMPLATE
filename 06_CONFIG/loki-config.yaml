@@ -1,17 +1,23 @@
-auth_enabled: false
+auth_enabled: true
 
 server:
   http_listen_port: 3100
   grpc_listen_port: 9096
+  tls_config:
+    cert_file: /etc/ssl/certs/loki.crt
+    key_file: /etc/ssl/private/loki.key
 
 common:
   instance_addr: 127.0.0.1
   path_prefix: /tmp/loki
   storage:
-    filesystem:
-      chunks_directory: /tmp/loki/chunks
-      rules_directory: /tmp/loki/rules
-  replication_factor: 1
+    s3:
+      bucketnames: my-loki-bucket
+      endpoint: s3.amazonaws.com
+      region: us-east-1
+      access_key_id: ${AWS_ACCESS_KEY_ID}
+      secret_access_key: ${AWS_SECRET_ACCESS_KEY}
+  replication_factor: 3
   ring:
     kvstore:
       store: inmemory
@@ -27,7 +33,7 @@ schema_config:
   configs:
     - from: 2020-10-24
       store: boltdb-shipper
-      object_store: filesystem
+      object_store: s3
       schema: v11
       index:
         prefix: index_
@@ -35,7 +41,6 @@ schema_config:
 
 ruler:
   alertmanager_url: http://localhost:9093
-
 # By default, Loki will send anonymous, but uniquely-identifiable usage and configuration
 # analytics to Grafana Labs. These statistics are sent to https://stats.grafana.org/
 #

@@ -22,7 +22,6 @@ let
   devTools = with pkgs; [
     # Version control
     git
-    git-lfs
 
     # Shell and terminal tools
     direnv
@@ -33,20 +32,16 @@ let
     # Text editors and tools
     vim
     neovim
-    emacs
-    nano
 
     # Build tools
-    make
+    gnumake
     cmake
     ninja
 
     # Development utilities
     jq
     yq
-    httpie
     curl
-    wget
 
     # Container tools
     docker
@@ -59,15 +54,15 @@ let
 
     # Database tools
     sqlite
-    postgresql
 
     # Documentation
-    pandoc
-    texlive.combined.scheme-basic
 
     # Security and linting
     shellcheck
     shfmt
+
+    # Locale support
+    glibcLocales
   ];
 
 in
@@ -78,11 +73,24 @@ pkgs.mkShell {
     nodejsEnv
   ] ++ devTools;
 
+  # Clear LC_ALL to prevent locale warnings
+  LC_ALL = "";
+
   # Environment variables
   shellHook = ''
+    # Clear LC_ALL immediately to prevent locale warnings
+    export LC_ALL=""
+
     echo "🚀 Welcome to the reproducible development environment!"
     echo "📦 Available tools: Python, Node.js, Git, Docker, and more"
     echo "🔧 Project root: $PWD"
+
+    # Set up locale configuration to prevent warnings
+    export LOCALE_ARCHIVE="${pkgs.glibcLocales}/lib/locale/locale-archive"
+    export LANG="C.utf8"
+    export LC_CTYPE="C.utf8"
+    export LC_COLLATE="C.utf8"
+    export LC_MESSAGES="C.utf8"
 
     # Set up environment
     export PROJECT_ROOT="$PWD"
@@ -91,6 +99,13 @@ pkgs.mkShell {
     # Load .env file if it exists (fallback for when direnv isn't available)
     if [ -f .env ]; then
       echo "📋 Loading environment variables from .env"
+      # Validate .env
+      if ! grep -q "^APP_ENV=" .env; then
+        echo "⚠️  Warning: APP_ENV not found in .env"
+      fi
+      if ! grep -q "^APP_NAME=" .env; then
+        echo "⚠️  Warning: APP_NAME not found in .env"
+      fi
       set -a
       source .env
       set +a
@@ -109,7 +124,7 @@ pkgs.mkShell {
   '';
 
   # Additional environment setup
-  PYTHONPATH = "$PROJECT_ROOT/src";
+  PYTHONPATH = "$PROJECT_ROOT/01_SRC";
 
   # Git configuration (optional)
   GIT_CONFIG_GLOBAL = pkgs.writeText "gitconfig" ''

@@ -4,7 +4,7 @@ global:
   scrape_timeout: 10s
 
 rule_files:
-  # - "alert_rules.yml"
+  - "alerting_rules.yml"
   # - "recording_rules.yml"
 
 scrape_configs:
@@ -21,6 +21,13 @@ scrape_configs:
     metrics_path: '/metrics'
     params:
       format: ['prometheus']
+    basic_auth:
+      username: ${PROMETHEUS_USERNAME}
+      password: ${PROMETHEUS_PASSWORD}
+    tls_config:
+      ca_file: /etc/ssl/certs/ca.pem
+      cert_file: /etc/ssl/certs/prometheus.crt
+      key_file: /etc/ssl/private/prometheus.key
 
   # Node.js application health
   - job_name: 'nodejs'
@@ -69,8 +76,23 @@ scrape_configs:
     scrape_interval: 60s
     metrics_path: '/metrics/business'
 
+  # Kubernetes service discovery
+  - job_name: 'kubernetes-pods'
+    kubernetes_sd_configs:
+      - role: pod
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        regex: (.+)
+        target_label: app
+        replacement: $1
+      - source_labels: [__meta_kubernetes_pod_container_port_number]
+        regex: '3000'
+        action: keep
+    scrape_interval: 15s
+    metrics_path: '/metrics'
+
 alerting:
   alertmanagers:
     - static_configs:
         - targets:
-          # - alertmanager:9093
+          - alertmanager:9093
