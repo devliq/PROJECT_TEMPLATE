@@ -26,7 +26,7 @@
     "security:fix": "npm audit fix",
     "dependency-review": "echo 'Dependency review should be handled by GitHub Actions workflow'",
     "typecheck": "tsc --noEmit",
-    "prepare": "husky"
+    "prepare": "npx --no-install husky install || true"
   },
   "keywords": [
     "template",
