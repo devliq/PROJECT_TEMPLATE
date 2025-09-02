@@ -10,8 +10,8 @@ on:
     - cron: '0 0 * * 0'  # Weekly on Sunday at midnight UTC
 
 env:
-  NODE_VERSION: "22.18.0"
-  PYTHON_VERSION: "3.13.6"
+  NODE_VERSION: "22.19.0"
+  PYTHON_VERSION: "3.13.7"
   REGISTRY: ghcr.io
 
 jobs:
