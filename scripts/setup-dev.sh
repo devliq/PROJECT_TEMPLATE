@@ -353,6 +353,13 @@ if command -v nix &> /dev/null; then
         log_success "nix-direnv is available"
     fi
 
+    # Install direnv plugins for better nvm/pyenv support
+    if nix-env -q | grep -q nix-direnv; then
+        log_info "Ensuring direnv plugins are available..."
+        # direnv itself provides the use_nvm and use_pyenv functions
+        nix-env -iA nixpkgs.direnv 2>/dev/null || log_info "direnv already available"
+    fi
+
     # Enable experimental features if needed
     if [ -f "flake.nix" ]; then
         log_info "Flake configuration detected"

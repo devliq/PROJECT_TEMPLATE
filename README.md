@@ -157,6 +157,51 @@ direnv allow
 - **`shell.nix`** - Traditional Nix shell configuration
 - **`flake.nix`** - Modern Nix flakes configuration
 - **`.env`** - Environment variables (created from `.env.example`)
+- **`.python-version`** - Python version specification (3.13.0)
+- **`.nvmrc`** - Node.js LTS version specification
+- **`scripts/setup-venv.sh`** - Automated virtual environment setup script
+
+### Automatic Virtual Environment Setup
+
+This template includes automatic Python virtual environment setup that works seamlessly with direnv:
+
+#### How It Works
+
+1. **Automatic Creation**: When you enter the project directory, direnv automatically creates a virtual environment if one doesn't exist
+2. **Dynamic Naming**: The virtual environment is named based on your project directory
+3. **Version Management**: Uses `.python-version` (3.13.0) and `.nvmrc` (LTS) for consistent tool versions
+4. **Dependency Installation**: Automatically installs requirements from `requirements.txt` or `pyproject.toml`
+
+#### Manual Setup (Alternative)
+
+If you prefer manual control, you can use the setup script:
+
+```bash
+# Run the automated setup script
+./scripts/setup-venv.sh
+
+# Or manually create and activate
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+#### VSCode Integration
+
+When opening the project in VSCode:
+
+1. Direnv automatically loads the environment
+2. Virtual environment is created if needed
+3. Python and Node.js versions are set automatically
+4. All dependencies are available in the integrated terminal
+
+#### Terminal Integration
+
+When using the terminal:
+
+1. `cd` into the project directory
+2. Run `direnv allow` (first time only)
+3. Environment loads automatically on every `cd`
 
 ### Benefits
 
@@ -172,6 +217,54 @@ direnv allow
 - **Nix slow**: Enable binary caches and use `nix-shell --pure`
 - **Permission issues**: Ensure proper Nix installation and user permissions
 - **Flakes not working**: Check experimental features are enabled
+
+### Python Version Management
+
+This template includes automated Python version management with optional auto-updates:
+
+#### Manual Version Updates
+
+Use the provided script to update Python versions:
+
+```bash
+# Update to latest stable Python version
+./scripts/update-python-version.sh
+
+# Update to latest patch for Python 3.12
+./scripts/update-python-version.sh --minor 3.12
+
+# Set specific version
+./scripts/update-python-version.sh --version 3.13.7
+```
+
+#### Optional Auto-Updates
+
+Enable automatic Python version updates by setting an environment variable:
+
+```bash
+# Enable auto-updates in your shell profile or .env file
+export PYTHON_AUTO_UPDATE=true
+
+# Or add to .env file
+echo "PYTHON_AUTO_UPDATE=true" >> .env
+```
+
+**Features:**
+
+- **Automatic Detection**: Checks for newer stable versions on environment load
+- **Non-Intrusive**: Only updates when a newer version is available
+- **Safe**: Uses pyenv for version management and installation
+- **Optional**: Disabled by default, must be explicitly enabled
+- **Efficient**: Only runs update check when environment loads (not on every command)
+
+**How it works:**
+
+1. When `PYTHON_AUTO_UPDATE=true` is set, direnv checks for newer Python versions
+2. Compares current `.python-version` with latest available stable version
+3. If newer version exists, automatically updates and installs it
+4. Virtual environment is recreated with the new Python version
+
+**Note:** Auto-updates only occur when entering the project directory with direnv. Set `PYTHON_AUTO_UPDATE=false` or remove the variable to disable.
 
 For detailed documentation, see the [Environment Setup Guide](docs/environment-setup.md).
 
@@ -509,7 +602,31 @@ npm run dev:ts  # TypeScript development
 
 ## Available Scripts
 
-## Available Scripts
+This template includes comprehensive scripts for development, testing, deployment, and environment management:
+
+### Python Version Management
+
+```bash
+./scripts/update-python-version.sh          # Update to latest stable Python version
+./scripts/update-python-version.sh --minor 3.12  # Update to latest patch for Python 3.12
+./scripts/update-python-version.sh --version 3.13.7  # Set specific Python version
+```
+
+### Environment Setup
+
+```bash
+./scripts/setup-venv.sh                    # Set up Python virtual environment
+./scripts/setup-dev.sh                     # Set up development environment
+./scripts/setup-ultimate.sh                # Complete development setup
+```
+
+### Build and Deployment
+
+```bash
+./scripts/build.sh                         # Build the project
+./scripts/deploy.sh                        # Deploy the application
+./scripts/gitops-deploy.sh                 # GitOps-based deployment
+```
 
 This template includes comprehensive npm scripts for development, testing, and deployment:
 

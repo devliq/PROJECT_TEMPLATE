@@ -292,6 +292,69 @@ cd your-project  # Environment loads automatically
 
    bash scripts/test-env.sh
 
+### Python Version Management
+
+This template includes automated Python version management with optional auto-updates for maintaining up-to-date Python environments.
+
+#### Manual Version Updates
+
+Use the provided script to update Python versions:
+
+```bash
+# Update to latest stable Python version
+./scripts/update-python-version.sh
+
+# Update to latest patch for Python 3.12
+./scripts/update-python-version.sh --minor 3.12
+
+# Set specific version
+./scripts/update-python-version.sh --version 3.13.7
+```
+
+The script automatically:
+
+- Uses pyenv to manage Python versions
+- Installs the specified version if not available
+- Updates `.python-version` file
+- Sets the local pyenv version
+
+#### Optional Auto-Updates
+
+Enable automatic Python version updates by setting an environment variable:
+
+```bash
+# Enable auto-updates in your shell profile or .env file
+export PYTHON_AUTO_UPDATE=true
+
+# Or add to .env file
+echo "PYTHON_AUTO_UPDATE=true" >> .env
+```
+
+**Auto-update features:**
+
+- **Automatic Detection**: Checks for newer stable versions when entering the project directory
+- **Non-Intrusive**: Only updates when a newer version is available
+- **Safe**: Uses pyenv for version management and installation
+- **Optional**: Disabled by default, must be explicitly enabled
+- **Efficient**: Only runs update check when environment loads (not on every command)
+
+**How auto-updates work:**
+
+1. When `PYTHON_AUTO_UPDATE=true` is set, direnv checks for newer Python versions
+2. Compares current `.python-version` with latest available stable version
+3. If newer version exists, automatically updates and installs it
+4. Virtual environment is recreated with the new Python version
+
+**Note:** Auto-updates only occur when entering the project directory with direnv. Set `PYTHON_AUTO_UPDATE=false` or remove the variable to disable.
+
+#### Version Management Best Practices
+
+- **Keep versions current**: Use auto-updates or manual updates to stay on recent stable versions
+- **Test after updates**: Run your test suite after Python version changes
+- **Document requirements**: Specify minimum Python version in project documentation
+- **Use virtual environments**: Always use virtual environments to isolate project dependencies
+- **Backup before major updates**: Consider backing up your environment before major version jumps
+
 ## Detailed Setup Instructions
 
 ### Direnv Configuration
@@ -383,6 +446,59 @@ if (Get-Command direnv -ErrorAction SilentlyContinue) {
 # Add to ~/.bashrc in WSL
 eval "$(direnv hook bash)"
 ```
+
+**External Terminals (MobaXterm, PuTTY, PowerShell, etc.):**
+
+For terminals that don't automatically load your shell configuration:
+
+```bash
+# Manual direnv setup for external terminals
+eval "$(direnv hook bash)"
+
+# Then navigate to your project
+cd /path/to/your/project
+
+# Allow direnv to load the environment
+direnv allow
+```
+
+**PowerShell (External):**
+
+```powershell
+# For external PowerShell terminals
+if (Get-Command direnv -ErrorAction SilentlyContinue) {
+    Invoke-Expression "$(direnv hook pwsh)"
+}
+
+# Navigate to project
+cd C:\path\to\your\project
+
+# Allow direnv
+direnv allow
+```
+
+**MobaXterm/PuTTY Setup:**
+
+1. **Connect to your server/WSL**
+2. **Run the direnv hook manually:**
+
+   ```bash
+   eval "$(direnv hook bash)"
+   ```
+
+3. **Navigate to your project:**
+
+   ```bash
+   cd /path/to/project
+   direnv allow
+   ```
+
+4. **For persistent setup, add to your shell profile:**
+
+   ```bash
+   echo 'eval "$(direnv hook bash)"' >> ~/.bashrc
+   source ~/.bashrc
+   ```
 
 #### Project Setup
 
@@ -778,6 +894,63 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 
 # Or run with bypass
 powershell -ExecutionPolicy Bypass -File .\scripts\setup-windows.ps1
+```
+
+**External Terminal Issues:**
+
+**Direnv not loading in MobaXterm/PuTTY:**
+
+```bash
+# Check if direnv hook is loaded
+echo $PROMPT_COMMAND | grep direnv
+
+# If not loaded, run manually
+eval "$(direnv hook bash)"
+
+# Then allow the environment
+direnv allow
+```
+
+**Environment not persisting in external terminals:**
+
+```bash
+# Add to your shell profile for persistence
+echo 'eval "$(direnv hook bash)"' >> ~/.bashrc
+echo 'eval "$(direnv hook bash)"' >> ~/.bash_profile
+
+# Reload your shell configuration
+source ~/.bashrc
+```
+
+**WSL external terminal issues:**
+
+```bash
+# If connecting via SSH/external terminal to WSL
+# Ensure direnv is installed in WSL
+which direnv
+
+# Load direnv hook
+eval "$(direnv hook bash)"
+
+# Navigate to project and allow
+cd /path/to/project
+direnv allow
+```
+
+**PowerShell external terminal issues:**
+
+```powershell
+# Check if direnv is available
+Get-Command direnv
+
+# Load direnv hook
+if (Get-Command direnv -ErrorAction SilentlyContinue) {
+    Invoke-Expression "$(direnv hook pwsh)"
+}
+
+# Navigate and allow
+cd C:\path\to\project
+direnv allow
 ```
 
 **Permission issues on Windows:**

@@ -333,6 +333,13 @@ install_nix() {
         # Install nix-direnv
         log_info "Installing nix-direnv..."
         nix-env -iA nixpkgs.nix-direnv
+    
+        # Install direnv plugins for nvm and pyenv
+        log_info "Installing direnv plugins..."
+        if nix-env -q | grep -q nix-direnv; then
+            # Try to install direnv plugins via nix if available
+            nix-env -iA nixpkgs.direnv 2>/dev/null || log_info "direnv already available"
+        fi
 
         log_success "Nix setup complete"
     else
