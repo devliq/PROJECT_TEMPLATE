@@ -77,7 +77,7 @@
         ]);
 
         # Node.js environment
-        nodejsEnv = pkgs.nodejs-lts;
+        nodejsEnv = pkgs.nodejs;
 
       in
       {
