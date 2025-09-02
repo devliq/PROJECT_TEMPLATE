@@ -348,7 +348,7 @@ jobs:
         run: |
           mkdir -p deployment
           cp -r src deployment/
-          cp -r build deployment/
+          cp -r dist deployment/
           cp package.json requirements.txt deployment/
           tar -czf deployment-${{ github.sha }}.tar.gz deployment/
 
