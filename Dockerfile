@@ -70,7 +70,7 @@ COPY --from=deps --chown=nodejs:nodejs /app/node_modules ./node_modules
 
 # Copy built application
 COPY --from=builder --chown=nodejs:nodejs /app/src ./src
-COPY --from=builder --chown=nodejs:nodejs /app/build ./build
+COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
 COPY --from=builder --chown=nodejs:nodejs /app/assets ./assets
 COPY --from=builder --chown=nodejs:nodejs /app/config ./config
 
