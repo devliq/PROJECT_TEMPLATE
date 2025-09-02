@@ -263,6 +263,7 @@ jobs:
         if: always()
         with:
           sarif_file: "trivy-results.sarif"
+          category: 'trivy-vuln'
 
       # Trivy Dependency Scanner (Replacement for Snyk)
       - name: Run Trivy dependency scanner
@@ -281,6 +282,7 @@ jobs:
         if: always()
         with:
           sarif_file: "trivy-deps.sarif"
+          category: 'trivy-deps'
 
       # Dependency Review (PR only)
       - name: Dependency Review
