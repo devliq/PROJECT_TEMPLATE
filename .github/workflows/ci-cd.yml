@@ -264,20 +264,28 @@ jobs:
         with:
           sarif_file: "trivy-results.sarif"
 
-      # Snyk Security Scan
-      - name: Run Snyk to check for vulnerabilities
-        uses: snyk/actions/node@master
-        continue-on-error: true
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      # Trivy Dependency Scanner (Replacement for Snyk)
+      - name: Run Trivy dependency scanner
+        uses: aquasecurity/trivy-action@master
         with:
-          args: --severity-threshold=high --sarif-file-output=snyk.sarif
+          scan-type: "fs"
+          scan-ref: "."
+          format: "sarif"
+          output: "trivy-deps.sarif"
+          severity: "CRITICAL,HIGH"
+          scanners: "vuln,secret"
+          trivy-config: |
+            package:
+              - "package.json"
+              - "package-lock.json"
+              - "requirements.txt"
+              - "pyproject.toml"
 
-      - name: Upload Snyk scan results to GitHub Code Scanning
+      - name: Upload Trivy dependency scan results
         uses: github/codeql-action/upload-sarif@main
         if: always()
         with:
-          sarif_file: snyk.sarif
+          sarif_file: "trivy-deps.sarif"
 
       # Dependency Review (PR only)
       - name: Dependency Review

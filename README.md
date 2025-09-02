@@ -448,10 +448,6 @@ Before using the CI/CD workflows, configure the following secrets in your GitHub
 
 ### Required Secrets for CI/CD
 
-#### Snyk Security Scanning
-
-- **`SNYK_TOKEN`**: Your Snyk API token for vulnerability scanning
-
 #### Staging Environment
 
 - **`STAGING_DATABASE_URL`**: Database connection string for staging
@@ -460,6 +456,13 @@ Before using the CI/CD workflows, configure the following secrets in your GitHub
 - **`STAGING_SSH_KEY`**: Private SSH key for staging server access
 - **`STAGING_PORT`**: SSH port for staging server (default: 22)
 - **`STAGING_URL`**: Public URL for staging environment
+
+#### Trivy Security Scanning
+
+- Trivy is used for comprehensive vulnerability scanning of dependencies and container images
+- No API token is required - Trivy works out of the box
+- Scans Node.js (package.json, package-lock.json) and Python (requirements.txt, pyproject.toml) dependencies
+- Results are uploaded to GitHub Code Scanning for integration with security alerts
 
 #### Production Environment
 

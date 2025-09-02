@@ -135,10 +135,18 @@ docker-compose up -d app-canary
    PRODUCTION_USER=deploy
    PRODUCTION_SSH_KEY=your-private-key
    SLACK_WEBHOOK=https://hooks.slack.com/...
-   SNYK_TOKEN=your-snyk-token
    ```
 
-2. **Environment Protection:**
+2. **Security Scanning Setup:**
+
+   The CI/CD pipeline uses Trivy for vulnerability scanning of dependencies and container images. Unlike Snyk, Trivy does not require an API token and works out of the box. It automatically scans:
+   - Node.js dependencies (package.json, package-lock.json)
+   - Python dependencies (requirements.txt, pyproject.toml)
+   - Container images for OS-level vulnerabilities
+
+   Scan results are uploaded to GitHub Code Scanning for integrated security monitoring.
+
+3. **Environment Protection:**
    ```yaml
    # .github/workflows/deploy.yml
    environment: production
