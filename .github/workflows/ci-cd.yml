@@ -274,12 +274,7 @@ jobs:
           output: "trivy-deps.sarif"
           severity: "CRITICAL,HIGH"
           scanners: "vuln,secret"
-          trivy-config: |
-            package:
-              - "package.json"
-              - "package-lock.json"
-              - "requirements.txt"
-              - "pyproject.toml"
+          trivy-config: trivy.yaml
 
       - name: Upload Trivy dependency scan results
         uses: github/codeql-action/upload-sarif@main
