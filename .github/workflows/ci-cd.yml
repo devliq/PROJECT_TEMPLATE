@@ -302,6 +302,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@master
 
+      - name: Set lowercase repository name
+        run: echo "REPO_NAME=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
       - name: Setup Node.js
         uses: actions/setup-node@master
         with:
@@ -333,13 +336,13 @@ jobs:
         with:
           context: .
           push: false
-          tags: ${{ env.REGISTRY }}/${{ github.repository }}:latest
+          tags: ${{ env.REGISTRY }}/${{ env.REPO_NAME }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: Test Docker image
         run: |
-          docker run --rm ${{ env.REGISTRY }}/${{ github.repository }}:latest npm test || echo "No test script in Docker"
+          docker run --rm ${{ env.REGISTRY }}/${{ env.REPO_NAME }}:latest npm test || echo "No test script in Docker"
 
       - name: Create deployment package
         run: |
