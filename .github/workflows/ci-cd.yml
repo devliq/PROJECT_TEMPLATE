@@ -7,11 +7,11 @@ on:
     branches: [main, develop]
   workflow_dispatch:
   schedule:
-    - cron: '0 0 * * 0'  # Weekly on Sunday at midnight UTC
+    - cron: '0 0 * * 0' # Weekly on Sunday at midnight UTC
 
 env:
-  NODE_VERSION: "22.19.0"
-  PYTHON_VERSION: "3.13.7"
+  NODE_VERSION: '22.19.0'
+  PYTHON_VERSION: '3.13.7'
   REGISTRY: ghcr.io
 
 jobs:
@@ -35,7 +35,7 @@ jobs:
         uses: actions/setup-node@master
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
+          cache: 'npm'
           cache-dependency-path: package-lock.json
 
       - name: Cache Node.js dependencies
@@ -53,7 +53,7 @@ jobs:
         uses: actions/setup-python@master
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          cache: "pip"
+          cache: 'pip'
           cache-dependency-path: requirements.txt
 
       - name: Cache Python dependencies
@@ -94,13 +94,13 @@ jobs:
         uses: actions/setup-node@master
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
+          cache: 'npm'
 
       - name: Setup Python
         uses: actions/setup-python@master
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          cache: "pip"
+          cache: 'pip'
 
       - name: Install dependencies
         run: |
@@ -159,13 +159,13 @@ jobs:
         uses: actions/setup-node@master
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
+          cache: 'npm'
 
       - name: Setup Python
         uses: actions/setup-python@master
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          cache: "pip"
+          cache: 'pip'
 
       - name: Install dependencies
         run: |
@@ -235,7 +235,7 @@ jobs:
         uses: actions/setup-node@master
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
@@ -252,36 +252,36 @@ jobs:
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          scan-type: "fs"
-          scan-ref: "."
-          format: "sarif"
-          output: "trivy-results.sarif"
-          severity: "CRITICAL,HIGH"
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
 
       - name: Upload Trivy scan results
         uses: github/codeql-action/upload-sarif@main
         if: always()
         with:
-          sarif_file: "trivy-results.sarif"
+          sarif_file: 'trivy-results.sarif'
           category: 'trivy-vuln'
 
       # Trivy Dependency Scanner (Replacement for Snyk)
       - name: Run Trivy dependency scanner
         uses: aquasecurity/trivy-action@master
         with:
-          scan-type: "fs"
-          scan-ref: "."
-          format: "sarif"
-          output: "trivy-deps.sarif"
-          severity: "CRITICAL,HIGH"
-          scanners: "vuln,secret"
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-deps.sarif'
+          severity: 'CRITICAL,HIGH'
+          scanners: 'vuln,secret'
           trivy-config: trivy.yaml
 
       - name: Upload Trivy dependency scan results
         uses: github/codeql-action/upload-sarif@main
         if: always()
         with:
-          sarif_file: "trivy-deps.sarif"
+          sarif_file: 'trivy-deps.sarif'
           category: 'trivy-deps'
 
       # Dependency Review (PR only)
@@ -309,13 +309,13 @@ jobs:
         uses: actions/setup-node@master
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
+          cache: 'npm'
 
       - name: Setup Python
         uses: actions/setup-python@master
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          cache: "pip"
+          cache: 'pip'
 
       - name: Install dependencies
         run: |
@@ -376,7 +376,7 @@ jobs:
         uses: actions/setup-node@master
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
@@ -389,7 +389,7 @@ jobs:
         with:
           build: npm run build
           start: npm start
-          wait-on: "http://localhost:3000"
+          wait-on: 'http://localhost:3000'
           record: true
         env:
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
@@ -440,7 +440,7 @@ jobs:
         uses: actions/setup-node@master
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
@@ -461,14 +461,27 @@ jobs:
         id: decrypt
         run: |
           pip install pyyaml
-          echo "${{ secrets.AGE_PRIVATE_KEY }}" > age-key.txt
-          ./sops --decrypt --age age-key.txt secrets.enc.yaml > secrets.yaml
-          echo "STAGING_HOST=$(python3 -c "import yaml; print(yaml.safe_load(open('secrets.yaml'))['STAGING_HOST'])" )" >> $GITHUB_ENV
-          echo "STAGING_USER=$(python3 -c "import yaml; print(yaml.safe_load(open('secrets.yaml'))['STAGING_USER'])" )" >> $GITHUB_ENV
-          echo "STAGING_SSH_KEY=$(python3 -c "import yaml; print(yaml.safe_load(open('secrets.yaml'))['STAGING_SSH_KEY'])" )" >> $GITHUB_ENV
-          echo "STAGING_PORT=$(python3 -c "import yaml; print(yaml.safe_load(open('secrets.yaml'))['STAGING_PORT'])" )" >> $GITHUB_ENV
-          echo "STAGING_URL=$(python3 -c "import yaml; print(yaml.safe_load(open('secrets.yaml'))['STAGING_URL'])" )" >> $GITHUB_ENV
-          echo "staging_url=$(python3 -c "import yaml; print(yaml.safe_load(open('secrets.yaml'))['STAGING_URL'])" )" >> $GITHUB_OUTPUT
+
+          # Check if secrets.enc.yaml contains placeholders (template mode)
+          if grep -q "PLACEHOLDER_" secrets.enc.yaml; then
+            echo "📋 Template mode detected - using placeholder values"
+            echo "STAGING_HOST=$(python3 -c "import yaml; print(yaml.safe_load(open('secrets.enc.yaml'))['STAGING_HOST'])" )" >> $GITHUB_ENV
+            echo "STAGING_USER=$(python3 -c "import yaml; print(yaml.safe_load(open('secrets.enc.yaml'))['STAGING_USER'])" )" >> $GITHUB_ENV
+            echo "STAGING_SSH_KEY=$(python3 -c "import yaml; print(yaml.safe_load(open('secrets.enc.yaml'))['STAGING_SSH_KEY'])" )" >> $GITHUB_ENV
+            echo "STAGING_PORT=$(python3 -c "import yaml; print(yaml.safe_load(open('secrets.enc.yaml'))['STAGING_PORT'])" )" >> $GITHUB_ENV
+            echo "STAGING_URL=$(python3 -c "import yaml; print(yaml.safe_load(open('secrets.enc.yaml'))['STAGING_URL'])" )" >> $GITHUB_ENV
+            echo "staging_url=$(python3 -c "import yaml; print(yaml.safe_load(open('secrets.enc.yaml'))['STAGING_URL'])" )" >> $GITHUB_OUTPUT
+          else
+            echo "🔐 Encrypted secrets detected - decrypting with SOPS"
+            echo "${{ secrets.AGE_PRIVATE_KEY }}" > age-key.txt
+            ./sops --decrypt --age age-key.txt secrets.enc.yaml > secrets.yaml
+            echo "STAGING_HOST=$(python3 -c "import yaml; print(yaml.safe_load(open('secrets.yaml'))['STAGING_HOST'])" )" >> $GITHUB_ENV
+            echo "STAGING_USER=$(python3 -c "import yaml; print(yaml.safe_load(open('secrets.yaml'))['STAGING_USER'])" )" >> $GITHUB_ENV
+            echo "STAGING_SSH_KEY=$(python3 -c "import yaml; print(yaml.safe_load(open('secrets.yaml'))['STAGING_SSH_KEY'])" )" >> $GITHUB_ENV
+            echo "STAGING_PORT=$(python3 -c "import yaml; print(yaml.safe_load(open('secrets.yaml'))['STAGING_PORT'])" )" >> $GITHUB_ENV
+            echo "STAGING_URL=$(python3 -c "import yaml; print(yaml.safe_load(open('secrets.yaml'))['STAGING_URL'])" )" >> $GITHUB_ENV
+            echo "staging_url=$(python3 -c "import yaml; print(yaml.safe_load(open('secrets.yaml'))['STAGING_URL'])" )" >> $GITHUB_OUTPUT
+          fi
 
       - name: Deploy to staging server
         uses: appleboy/ssh-action@master
@@ -545,7 +558,7 @@ jobs:
         uses: actions/setup-node@master
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
+          cache: 'npm'
 
       - name: Install production dependencies
         run: npm ci --production
@@ -657,7 +670,8 @@ jobs:
   notifications:
     name: Send Notifications
     runs-on: ubuntu-latest
-    needs: [quality, test, security, e2e, smoke-staging, smoke-production, renovate]
+    needs:
+      [quality, test, security, e2e, smoke-staging, smoke-production, renovate]
     if: always()
 
     steps:
