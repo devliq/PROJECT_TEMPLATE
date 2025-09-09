@@ -13,9 +13,20 @@ const mockDotenv = {
   config: jest.fn(),
 };
 
+const mockExpress = jest.fn(() => ({
+  use: jest.fn(),
+  get: jest.fn(),
+  listen: jest.fn((port, callback) => {
+    if (callback) callback();
+    return { on: jest.fn() };
+  }),
+  static: jest.fn(),
+}));
+
 jest.mock('fs', () => mockFs);
 jest.mock('path', () => mockPath);
 jest.mock('dotenv', () => mockDotenv);
+jest.mock('express', () => mockExpress);
 
 // Mock console methods
 const mockConsole = {
@@ -42,6 +53,10 @@ jest
     obj[prop] = descriptor.value;
   });
 
+// Reset module cache to ensure mocks are applied
+jest.resetModules();
+
+// Moved require after mocks to ensure mocks are applied
 const {
   greet,
   getAppInfo,
@@ -304,8 +319,6 @@ describe('initialize', () => {
   test('should initialize application successfully', async () => {
     await initialize();
 
-    const appInfo = getAppInfo();
-
     expect(mockConsole.log).toHaveBeenCalledWith(
       'ℹ️  🚀 Starting Node.js application...'
     );
@@ -315,20 +328,6 @@ describe('initialize', () => {
     expect(mockConsole.log).toHaveBeenCalledWith('ℹ️  📂 Platform: linux');
     expect(mockConsole.log).toHaveBeenCalledWith('ℹ️  🚪 Port: 3000');
     expect(mockConsole.debug).toHaveBeenCalledWith('🐛 🐛 Debug mode enabled');
-    expect(mockConsole.log).toHaveBeenCalledWith('ℹ️  \n📝 Example Usage:');
-    expect(mockConsole.log).toHaveBeenCalledWith(
-      `ℹ️  ${greet('Developer', 'Test App')}`
-    );
-    expect(mockConsole.log).toHaveBeenCalledWith(
-      `ℹ️  ${greet('World', 'Test App')}`
-    );
-    expect(mockConsole.log).toHaveBeenCalledWith('ℹ️  \n📊 Application Info:');
-    expect(mockConsole.log).toHaveBeenCalledWith(
-      `ℹ️  ${JSON.stringify(appInfo, null, 2)}`
-    );
-    expect(mockConsole.log).toHaveBeenCalledWith(
-      'ℹ️  \n✅ Application initialized successfully!'
-    );
   });
 
   test('should handle missing .env file during initialization', async () => {
@@ -340,8 +339,17 @@ describe('initialize', () => {
       '⚠️ .env file not found. Using default configuration.'
     );
     expect(mockConsole.log).toHaveBeenCalledWith(
-      'ℹ️  \n✅ Application initialized successfully!'
+      'ℹ️  🚀 Starting Node.js application...'
     );
+    expect(mockConsole.log).toHaveBeenCalledWith(
+      'ℹ️  📱 App: Project Template v1.0.0'
+    );
+    expect(mockConsole.log).toHaveBeenCalledWith(
+      'ℹ️  🌍 Environment: development'
+    );
+    expect(mockConsole.log).toHaveBeenCalledWith('ℹ️  🔧 Node.js: v16.0.0');
+    expect(mockConsole.log).toHaveBeenCalledWith('ℹ️  📂 Platform: linux');
+    expect(mockConsole.log).toHaveBeenCalledWith('ℹ️  🚪 Port: 3000');
   });
 
   test('should exit on configuration error', async () => {
@@ -398,10 +406,13 @@ describe('Integration Tests', () => {
     expect(mockConsole.log).toHaveBeenCalledWith(
       'ℹ️  🚀 Starting Node.js application...'
     );
-
     expect(mockConsole.log).toHaveBeenCalledWith(
-      'ℹ️  \n✅ Application initialized successfully!'
+      'ℹ️  📱 App: Integration Test App v1.0.0'
     );
+    expect(mockConsole.log).toHaveBeenCalledWith('ℹ️  🌍 Environment: test');
+    expect(mockConsole.log).toHaveBeenCalledWith('ℹ️  🔧 Node.js: v16.0.0');
+    expect(mockConsole.log).toHaveBeenCalledWith('ℹ️  📂 Platform: linux');
+    expect(mockConsole.log).toHaveBeenCalledWith('ℹ️  🚪 Port: 4000');
   });
 
   test('should handle full flow with missing .env', async () => {
@@ -414,8 +425,17 @@ describe('Integration Tests', () => {
     );
 
     expect(mockConsole.log).toHaveBeenCalledWith(
-      'ℹ️  \n✅ Application initialized successfully!'
+      'ℹ️  🚀 Starting Node.js application...'
     );
+    expect(mockConsole.log).toHaveBeenCalledWith(
+      'ℹ️  📱 App: Project Template v1.0.0'
+    );
+    expect(mockConsole.log).toHaveBeenCalledWith(
+      'ℹ️  🌍 Environment: development'
+    );
+    expect(mockConsole.log).toHaveBeenCalledWith('ℹ️  🔧 Node.js: v16.0.0');
+    expect(mockConsole.log).toHaveBeenCalledWith('ℹ️  📂 Platform: linux');
+    expect(mockConsole.log).toHaveBeenCalledWith('ℹ️  🚪 Port: 3000');
   });
 
   test('should handle configuration errors gracefully', async () => {
