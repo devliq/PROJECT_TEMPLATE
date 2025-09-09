@@ -11,6 +11,7 @@
 
 const path = require('path');
 const fs = require('fs').promises;
+const express = require('express');
 
 // =============================================================================
 // LOGGING UTILITIES
@@ -168,6 +169,57 @@ class RateLimiter {
 const rateLimiter = new RateLimiter();
 
 // =============================================================================
+// EXPRESS SERVER SETUP
+// =============================================================================
+
+/**
+ * Create and configure Express application
+ */
+function createServer() {
+  const app = express();
+
+  // Middleware for logging requests
+  app.use((req, res, next) => {
+    const timestamp = new Date().toISOString();
+    logger.info(`[${timestamp}] ${req.method} ${req.url} - ${req.ip}`);
+    next();
+  });
+
+  // Serve static files from project root directory
+  app.use(express.static(path.join(__dirname, '..')));
+
+  // Also serve src directory for backward compatibility
+  app.use('/src', express.static(__dirname));
+
+  // Specific routes for package.json and README.md
+  app.get('/package.json', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'package.json'));
+  });
+
+  app.get('/README.md', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'README.md'));
+  });
+
+  // Update the log message to reflect the correct directory
+  logger.info(`📁 Serving static files from: ${path.join(__dirname, '..')}`);
+
+  // API endpoint for app info
+  app.get('/api/info', (req, res) => {
+    if (!appConfig) {
+      return res.status(500).json({ error: 'Application not initialized' });
+    }
+    res.json(getAppInfo());
+  });
+
+  // Root route
+  app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+  });
+
+  return app;
+}
+
+// =============================================================================
 // CONFIGURATION MANAGEMENT
 // =============================================================================
 
@@ -177,7 +229,7 @@ const rateLimiter = new RateLimiter();
  */
 async function loadConfiguration() {
   // Resolve the .env file path relative to the project root
-  const envPath = path.resolve(__dirname, '../config/.env');
+  const envPath = path.resolve(__dirname, '../.env');
 
   // Check if .env file exists
   try {
@@ -376,6 +428,21 @@ async function initialize() {
 
     // Log startup information
     logStartupInfo();
+
+    // Create Express server
+    const app = createServer();
+
+    // Start the server
+    const server = app.listen(appConfig.port, () => {
+      logger.info(`🚀 Server is running on http://localhost:${appConfig.port}`);
+      logger.info(`📁 Serving static files from: ${__dirname}`);
+    });
+
+    // Handle server errors
+    server.on('error', error => {
+      logger.error('❌ Server error:', error.message);
+      process.exit(1);
+    });
 
     // Demonstrate core functionality
     logger.info('\n📝 Example Usage:');
