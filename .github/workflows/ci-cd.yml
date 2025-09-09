@@ -465,22 +465,38 @@ jobs:
           # Check if secrets.enc.yaml contains placeholders (template mode)
           if grep -q "PLACEHOLDER_" secrets.enc.yaml; then
             echo "📋 Template mode detected - using placeholder values"
-            echo "STAGING_HOST=$(python3 -c "import yaml; print(yaml.safe_load(open('secrets.enc.yaml'))['STAGING_HOST'])" )" >> $GITHUB_ENV
-            echo "STAGING_USER=$(python3 -c "import yaml; print(yaml.safe_load(open('secrets.enc.yaml'))['STAGING_USER'])" )" >> $GITHUB_ENV
-            echo "STAGING_SSH_KEY=$(python3 -c "import yaml; print(yaml.safe_load(open('secrets.enc.yaml'))['STAGING_SSH_KEY'])" )" >> $GITHUB_ENV
-            echo "STAGING_PORT=$(python3 -c "import yaml; print(yaml.safe_load(open('secrets.enc.yaml'))['STAGING_PORT'])" )" >> $GITHUB_ENV
-            echo "STAGING_URL=$(python3 -c "import yaml; print(yaml.safe_load(open('secrets.enc.yaml'))['STAGING_URL'])" )" >> $GITHUB_ENV
-            echo "staging_url=$(python3 -c "import yaml; print(yaml.safe_load(open('secrets.enc.yaml'))['STAGING_URL'])" )" >> $GITHUB_OUTPUT
+            STAGING_HOST_VALUE=$(python3 -c "import yaml; print(yaml.safe_load(open('secrets.enc.yaml'))['STAGING_HOST'])" )
+            STAGING_USER_VALUE=$(python3 -c "import yaml; print(yaml.safe_load(open('secrets.enc.yaml'))['STAGING_USER'])" )
+            STAGING_SSH_KEY_VALUE=$(python3 -c "import yaml; print(yaml.safe_load(open('secrets.enc.yaml'))['STAGING_SSH_KEY'])" )
+            STAGING_PORT_VALUE=$(python3 -c "import yaml; print(yaml.safe_load(open('secrets.enc.yaml'))['STAGING_PORT'])" )
+            STAGING_URL_VALUE=$(python3 -c "import yaml; print(yaml.safe_load(open('secrets.enc.yaml'))['STAGING_URL'])" )
+            echo "STAGING_HOST=$STAGING_HOST_VALUE" >> $GITHUB_ENV
+            echo "STAGING_USER=$STAGING_USER_VALUE" >> $GITHUB_ENV
+            echo "STAGING_SSH_KEY=$STAGING_SSH_KEY_VALUE" >> $GITHUB_ENV
+            echo "STAGING_PORT=$STAGING_PORT_VALUE" >> $GITHUB_ENV
+            echo "STAGING_URL=$STAGING_URL_VALUE" >> $GITHUB_ENV
+            echo "staging_url=$STAGING_URL_VALUE" >> $GITHUB_OUTPUT
           else
             echo "🔐 Encrypted secrets detected - decrypting with SOPS"
             echo "${{ secrets.AGE_PRIVATE_KEY }}" > age-key.txt
             ./sops --decrypt --age age-key.txt secrets.enc.yaml > secrets.yaml
-            echo "STAGING_HOST=$(python3 -c "import yaml; print(yaml.safe_load(open('secrets.yaml'))['STAGING_HOST'])" )" >> $GITHUB_ENV
-            echo "STAGING_USER=$(python3 -c "import yaml; print(yaml.safe_load(open('secrets.yaml'))['STAGING_USER'])" )" >> $GITHUB_ENV
-            echo "STAGING_SSH_KEY=$(python3 -c "import yaml; print(yaml.safe_load(open('secrets.yaml'))['STAGING_SSH_KEY'])" )" >> $GITHUB_ENV
-            echo "STAGING_PORT=$(python3 -c "import yaml; print(yaml.safe_load(open('secrets.yaml'))['STAGING_PORT'])" )" >> $GITHUB_ENV
-            echo "STAGING_URL=$(python3 -c "import yaml; print(yaml.safe_load(open('secrets.yaml'))['STAGING_URL'])" )" >> $GITHUB_ENV
-            echo "staging_url=$(python3 -c "import yaml; print(yaml.safe_load(open('secrets.yaml'))['STAGING_URL'])" )" >> $GITHUB_OUTPUT
+            STAGING_HOST_VALUE=$(python3 -c "import yaml; print(yaml.safe_load(open('secrets.yaml'))['STAGING_HOST'])" )
+            STAGING_USER_VALUE=$(python3 -c "import yaml; print(yaml.safe_load(open('secrets.yaml'))['STAGING_USER'])" )
+            STAGING_SSH_KEY_VALUE=$(python3 -c "import yaml; print(yaml.safe_load(open('secrets.yaml'))['STAGING_SSH_KEY'])" )
+            STAGING_PORT_VALUE=$(python3 -c "import yaml; print(yaml.safe_load(open('secrets.yaml'))['STAGING_PORT'])" )
+            STAGING_URL_VALUE=$(python3 -c "import yaml; print(yaml.safe_load(open('secrets.yaml'))['STAGING_URL'])" )
+            echo "STAGING_HOST=$STAGING_HOST_VALUE" >> $GITHUB_ENV
+            echo "STAGING_USER=$STAGING_USER_VALUE" >> $GITHUB_ENV
+            echo "STAGING_SSH_KEY=$STAGING_SSH_KEY_VALUE" >> $GITHUB_ENV
+            echo "STAGING_PORT=$STAGING_PORT_VALUE" >> $GITHUB_ENV
+            echo "STAGING_URL=$STAGING_URL_VALUE" >> $GITHUB_ENV
+            echo "staging_url=$STAGING_URL_VALUE" >> $GITHUB_OUTPUT
+          fi
+
+          # Validate that no placeholder values are used
+          if [[ "$STAGING_HOST_VALUE" == PLACEHOLDER_* ]] || [[ "$STAGING_USER_VALUE" == PLACEHOLDER_* ]] || [[ "$STAGING_SSH_KEY_VALUE" == PLACEHOLDER_* ]] || [[ "$STAGING_PORT_VALUE" == PLACEHOLDER_* ]] || [[ "$STAGING_URL_VALUE" == PLACEHOLDER_* ]]; then
+            echo "❌ Error: Placeholder values detected in secrets. Please configure actual values in secrets.enc.yaml."
+            exit 1
           fi
 
       - name: Deploy to staging server
