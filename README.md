@@ -14,6 +14,7 @@ This is a comprehensive template for new projects following the Windows 8.3 comp
 - [Prerequisites](#prerequisites)
 - [Environment Reproducibility](#environment-reproducibility)
 - [Getting Started](#getting-started)
+- [SSH Key Authentication and Git Setup](#ssh-key-authentication-and-git-setup)
 - [Usage](#usage)
 - [Development Workflow](#development-workflow)
 - [Best Practices](#best-practices)
@@ -307,6 +308,147 @@ git commit -m "Initial commit with project template"
 
 - Place third-party libraries in `vendor/` or use package managers
 - Update dependency management files as needed
+
+## SSH Key Authentication and Git Setup
+
+This section addresses common authentication issues with GitHub and provides step-by-step instructions for setting up SSH key authentication.
+
+### Setting up SSH Keys
+
+1. **Generate a new SSH key pair**:
+
+```bash
+ssh-keygen -t ed25519 -C "your_email@example.com"
+```
+
+2. **Add the SSH key to the SSH agent**:
+
+```bash
+# Start the SSH agent
+eval "$(ssh-agent -s)"
+
+# Add your SSH private key
+ssh-add ~/.ssh/id_ed25519
+```
+
+3. **Add the public key to your GitHub account**:
+
+- Copy the public key: `cat ~/.ssh/id_ed25519.pub`
+- Go to GitHub → Settings → SSH and GPG keys → New SSH key
+- Paste the public key and save
+
+### Troubleshooting "Permission denied (publickey)" Errors
+
+Common causes and solutions:
+
+1. **SSH key not added to agent**:
+
+```bash
+# Check if SSH agent is running
+ssh-add -l
+
+# If no keys listed, add your key
+ssh-add ~/.ssh/id_ed25519
+```
+
+2. **Wrong SSH key or key not recognized**:
+
+```bash
+# Verify the key is correct
+ssh-keygen -l -f ~/.ssh/id_ed25519.pub
+
+# Test connection to GitHub
+ssh -T git@github.com
+```
+
+3. **Repository URL using HTTPS instead of SSH**:
+
+```bash
+# Check current remote URL
+git remote -v
+
+# Change to SSH URL
+git remote set-url origin git@github.com:username/repo.git
+```
+
+4. **SSH agent not running**:
+
+```bash
+# Start SSH agent
+eval "$(ssh-agent -s)"
+
+# Add key to agent
+ssh-add ~/.ssh/id_ed25519
+```
+
+### Checking SSH Agent Status with 'ssh-add -l'
+
+```bash
+# List all identities in SSH agent
+ssh-add -l
+
+# Expected output (shows loaded keys):
+# 256 SHA256:... user@hostname (ED25519)
+
+# If no keys are listed:
+ssh-add ~/.ssh/id_ed25519
+```
+
+### Verifying SSH Keys in ~/.ssh/
+
+```bash
+# List SSH directory contents
+ls -la ~/.ssh/
+
+# Check public key fingerprint
+ssh-keygen -l -f ~/.ssh/id_ed25519.pub
+
+# Verify private key format
+head -n 5 ~/.ssh/id_ed25519
+
+# Check file permissions (should be 600 for private key)
+ls -l ~/.ssh/id_ed25519
+```
+
+### Testing Connection with 'ssh -T git@github.com'
+
+```bash
+# Test SSH connection to GitHub
+ssh -T git@github.com
+
+# Expected successful output:
+# Hi username! You've successfully authenticated, but GitHub does not provide shell access.
+
+# If connection fails, common issues:
+# - SSH key not added to GitHub
+# - SSH agent not running
+# - Firewall blocking SSH
+# - Wrong SSH key format
+```
+
+### Confirming Remote URLs with 'git remote -v'
+
+```bash
+# Check current remote repository URLs
+git remote -v
+
+# Expected output for SSH:
+# origin  git@github.com:username/repo.git (fetch)
+# origin  git@github.com:username/repo.git (push)
+
+# To change from HTTPS to SSH:
+git remote set-url origin git@github.com:username/repo.git
+
+# To change from SSH to HTTPS:
+git remote set-url origin https://github.com/username/repo.git
+```
+
+### Additional Tips
+
+- **Multiple SSH keys**: Use `~/.ssh/config` to manage multiple keys
+- **Key passphrase**: Consider using a passphrase for added security
+- **Backup keys**: Always backup your SSH keys securely
+- **Regular rotation**: Rotate SSH keys periodically for security
 
 ## Usage
 
