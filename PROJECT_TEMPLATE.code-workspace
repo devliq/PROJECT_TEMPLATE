@@ -1,0 +1,26 @@
+{
+  "folders": [
+    {
+      "name": "PROJECT_TEMPLATE",
+      "path": "."
+    }
+  ],
+  "settings": {
+    "typescript.preferences.importModuleSpecifier": "relative",
+    "python.defaultInterpreterPath": "./venv/bin/python",
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "eslint.enable": true
+  },
+  "extensions": {
+    "recommendations": [
+      "ms-vscode.vscode-typescript-next",
+      "ms-python.python",
+      "ms-vscode.vscode-docker",
+      "dbaeumer.vscode-eslint",
+      "esbenp.prettier-vscode",
+      "ms-vscode.vscode-json",
+      "redhat.vscode-yaml"
+    ]
+  }
+}

@@ -419,6 +419,8 @@ jobs:
     needs: [build]
     if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') && github.event_name == 'push'
     environment: staging
+    outputs:
+      staging_url: ${{ steps.decrypt.outputs.staging_url }}
 
     steps:
       - name: Checkout code
@@ -448,13 +450,33 @@ jobs:
         env:
           NODE_ENV: production
 
+      - name: Install tools
+        run: |
+          curl -L -o sops https://github.com/mozilla/sops/releases/download/v3.9.0/sops-v3.9.0.linux.amd64
+          chmod +x sops
+          curl -L -o age.tar.gz https://github.com/FiloSottile/age/releases/download/v1.1.1/age-v1.1.1-linux-amd64.tar.gz
+          tar -xzf age.tar.gz
+
+      - name: Decrypt secrets
+        id: decrypt
+        run: |
+          pip install pyyaml
+          echo "${{ secrets.AGE_PRIVATE_KEY }}" > age-key.txt
+          ./sops --decrypt --age age-key.txt secrets.enc.yaml > secrets.yaml
+          echo "STAGING_HOST=$(python3 -c "import yaml; print(yaml.safe_load(open('secrets.yaml'))['STAGING_HOST'])" )" >> $GITHUB_ENV
+          echo "STAGING_USER=$(python3 -c "import yaml; print(yaml.safe_load(open('secrets.yaml'))['STAGING_USER'])" )" >> $GITHUB_ENV
+          echo "STAGING_SSH_KEY=$(python3 -c "import yaml; print(yaml.safe_load(open('secrets.yaml'))['STAGING_SSH_KEY'])" )" >> $GITHUB_ENV
+          echo "STAGING_PORT=$(python3 -c "import yaml; print(yaml.safe_load(open('secrets.yaml'))['STAGING_PORT'])" )" >> $GITHUB_ENV
+          echo "STAGING_URL=$(python3 -c "import yaml; print(yaml.safe_load(open('secrets.yaml'))['STAGING_URL'])" )" >> $GITHUB_ENV
+          echo "staging_url=$(python3 -c "import yaml; print(yaml.safe_load(open('secrets.yaml'))['STAGING_URL'])" )" >> $GITHUB_OUTPUT
+
       - name: Deploy to staging server
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.STAGING_HOST }}
-          username: ${{ secrets.STAGING_USER }}
-          key: ${{ secrets.STAGING_SSH_KEY }}
-          port: ${{ secrets.STAGING_PORT }}
+          host: ${{ env.STAGING_HOST }}
+          username: ${{ env.STAGING_USER }}
+          key: ${{ env.STAGING_SSH_KEY }}
+          port: ${{ env.STAGING_PORT }}
           script: |
             cd /opt/myproject
             # Backup current deployment
@@ -491,8 +513,8 @@ jobs:
 
       - name: Run staging smoke tests
         run: |
-          curl -f ${{ secrets.STAGING_URL }}/health
-          curl -f ${{ secrets.STAGING_URL }}/api/status
+          curl -f ${{ needs.deploy-staging.outputs.staging_url }}/health
+          curl -f ${{ needs.deploy-staging.outputs.staging_url }}/api/status
           # Add more comprehensive smoke tests here
 
   # =============================================================================
