@@ -7,6 +7,13 @@
 - Use descriptive branch names (feature/user-auth, fix/login-bug)
 - Delete merged branches to keep repository clean
 
+## Modern Integrations
+
+- Use GitHub PR templates for standardized pull requests and code reviews
+- Implement branch protection rules to enforce code quality and prevent direct pushes to main
+- Integrate CI/CD pipelines with GitHub Actions for automated testing, building, and deployment
+- Leverage Git hooks for pre-commit checks and automated formatting
+
 ## Commit Standards
 
 - Make small, focused commits that represent single logical changes

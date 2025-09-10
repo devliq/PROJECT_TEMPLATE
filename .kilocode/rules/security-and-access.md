@@ -17,6 +17,14 @@
 - Use secure defaults for all configuration options
 - Follow principle of least privilege for file permissions
 
+## Security Tools and Integrations
+
+- Implement SAST (Static Application Security Testing) with tools like SonarQube or Checkmarx
+- Use dependency scanning tools like Dependabot, Snyk, or OWASP Dependency-Check for vulnerability detection
+- Integrate secrets management with tools like HashiCorp Vault, AWS Secrets Manager, or Azure Key Vault
+- Use DAST (Dynamic Application Security Testing) tools like OWASP ZAP for runtime security testing
+- Implement automated security scanning in CI/CD pipelines
+
 ## Data Handling
 
 - Sanitize all user inputs before processing

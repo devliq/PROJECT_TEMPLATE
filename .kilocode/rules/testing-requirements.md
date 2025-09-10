@@ -8,6 +8,14 @@
 - Write descriptive test names that explain what is being tested
 - Use arrange-act-assert pattern in test structure
 
+## Testing Tools and Automation
+
+- Use Jest for unit testing JavaScript/TypeScript applications
+- Implement Cypress for end-to-end testing and UI automation
+- Integrate automated testing in CI/CD pipelines with GitHub Actions
+- Use tools like Selenium for cross-browser testing
+- Leverage tools like TestCafe for functional testing
+
 ## Pre-commit Checks
 
 - All tests must pass before committing

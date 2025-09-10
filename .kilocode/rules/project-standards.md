@@ -9,6 +9,14 @@
 - Maintain consistent naming conventions throughout the project
 - Write self-documenting code with clear, concise comments when necessary
 
+## Code Quality Tools
+
+- Use ESLint for JavaScript/TypeScript linting and code quality enforcement
+- Implement Prettier for consistent code formatting across the project
+- Integrate Husky for Git hooks to run pre-commit checks automatically
+- Leverage tools like SonarQube for static code analysis and quality metrics
+- Use EditorConfig to maintain consistent coding styles across different editors
+
 ## Code Structure and Organization
 
 - Organize code into logical modules and packages

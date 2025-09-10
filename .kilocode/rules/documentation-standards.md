@@ -8,6 +8,14 @@
 - Provide troubleshooting section for common issues
 - Include contribution guidelines and development setup
 
+## Documentation Tools and Automation
+
+- Use Docusaurus, MkDocs, or GitBook for generating and hosting comprehensive documentation sites
+- Integrate API documentation with Swagger/OpenAPI specifications for interactive API docs
+- Automate documentation generation and deployment with CI/CD pipelines
+- Use tools like JSDoc or Sphinx for auto-generating code documentation
+- Implement versioned documentation to match software releases
+
 ## Code Documentation
 
 - Document all public APIs with clear parameter and return value descriptions

@@ -13,6 +13,13 @@
   - `test:` for test additions/modifications
   - `chore:` for maintenance tasks
 
+## Automation Tools
+
+- Use semantic-release for automated versioning and changelog generation based on commit messages
+- Integrate with GitHub Actions or GitLab CI for automated changelog updates on releases
+- Leverage tools like conventional-changelog or auto-changelog for generating changelogs from git history
+- Implement commitizen for interactive commit message formatting to ensure consistency
+
 ## Changelog Format
 
 - Group changes by version with release date
