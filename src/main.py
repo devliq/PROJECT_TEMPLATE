@@ -217,7 +217,8 @@ def load_configuration() -> AppConfig:
             # Check if .env file exists and load it
             if not env_path.exists():
                 logging.warning(
-                    f"⚠️  .env file not found at {env_path}. Using environment variables."
+                    f"⚠️  .env file not found at {env_path}."
+                    " Using environment variables."
                 )
             else:
                 logging.info(f"📄 Loading configuration from: {env_path}")
