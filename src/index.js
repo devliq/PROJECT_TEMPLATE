@@ -134,13 +134,19 @@ function createServer() {
 }
 
 // Load configuration and create app
+let app;
 if (process.env.NODE_ENV !== 'test') {
   (async () => {
     appConfig = await loadConfiguration();
     logStartupInfo();
+    app = createServer();
+    app.listen(appConfig.port, () => {
+      logger.info(`🚀 Server is running on http://localhost:${appConfig.port}`);
+    });
   })();
+} else {
+  app = createServer();
 }
-const app = createServer();
 
 /**
  * Initialize the application by loading configuration and logging startup info
