@@ -31,43 +31,6 @@ const logger = {
 let appConfig = null;
 
 /**
- * Sanitize user input to prevent injection attacks
- * @param {string} input - Input string to sanitize
- * @param {Object} options - Sanitization options
- * @returns {string} Sanitized input
- */
-function sanitizeInput(input, options = {}) {
-  if (typeof input !== 'string') {
-    throw new Error('Input must be a string');
-  }
-
-  let sanitized = input.trim();
-
-  // Remove null bytes and control characters
-  sanitized = [...sanitized]
-    .filter(char => {
-      const code = char.charCodeAt(0);
-      return code >= 32 && code !== 127; // Keep printable characters only
-    })
-    .join('');
-
-  // Remove potential script tags (safer version to avoid ReDoS)
-  sanitized = sanitized.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
-
-  // Remove HTML tags if specified
-  if (options.stripHtml) {
-    sanitized = sanitized.replace(/<[^>]*>/g, '');
-  }
-
-  // Limit length
-  if (options.maxLength && sanitized.length > options.maxLength) {
-    sanitized = sanitized.substring(0, options.maxLength);
-  }
-
-  return sanitized;
-}
-
-/**
  * Check if a configuration value appears to contain sensitive information
  * @param {string} key - Configuration key
  * @param {string} value - Configuration value
@@ -105,68 +68,6 @@ function isSensitiveValue(key, value) {
 
   return false;
 }
-
-/**
- * Simple in-memory rate limiter
- */
-class RateLimiter {
-  constructor(windowMs = 900000, maxRequests = 100) {
-    // 15 minutes, 100 requests
-    this.windowMs = windowMs;
-    this.maxRequests = maxRequests;
-    this.requests = new Map();
-  }
-
-  /**
-   * Check if request is allowed
-   * @param {string} identifier - Unique identifier (e.g., IP address)
-   * @returns {boolean} True if request is allowed
-   */
-  isAllowed(identifier) {
-    const now = Date.now();
-    const windowStart = now - this.windowMs;
-
-    if (!this.requests.has(identifier)) {
-      this.requests.set(identifier, []);
-    }
-
-    const userRequests = this.requests.get(identifier);
-
-    // Remove old requests outside the window
-    const validRequests = userRequests.filter(time => time > windowStart);
-    this.requests.set(identifier, validRequests);
-
-    if (validRequests.length >= this.maxRequests) {
-      return false;
-    }
-
-    // Add current request
-    validRequests.push(now);
-    return true;
-  }
-
-  /**
-   * Get remaining requests for identifier
-   * @param {string} identifier - Unique identifier
-   * @returns {number} Remaining requests
-   */
-  getRemainingRequests(identifier) {
-    const now = Date.now();
-    const windowStart = now - this.windowMs;
-
-    if (!this.requests.has(identifier)) {
-      return this.maxRequests;
-    }
-
-    const userRequests = this.requests.get(identifier);
-    const validRequests = userRequests.filter(time => time > windowStart);
-
-    return Math.max(0, this.maxRequests - validRequests.length);
-  }
-}
-
-// Global rate limiter instance
-const rateLimiter = new RateLimiter();
 
 // =============================================================================
 // EXPRESS SERVER SETUP
@@ -216,8 +117,27 @@ function createServer() {
     res.sendFile(path.join(__dirname, 'index.html'));
   });
 
+  // API endpoint for greeting
+  app.get('/api/greet/:name', (req, res) => {
+    try {
+      const { name } = req.params;
+      const appName = req.query.appName || 'Project Template';
+      const greeting = greet(name, appName);
+      res.json({ greeting });
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
   return app;
 }
+
+// Load configuration and create app
+(async () => {
+  appConfig = await loadConfiguration();
+  logStartupInfo();
+})();
+const app = createServer();
 
 // =============================================================================
 // CONFIGURATION MANAGEMENT
@@ -328,50 +248,6 @@ function getDefaultConfig() {
 // =============================================================================
 
 /**
- * Generate a personalized greeting message with validation
- * @param {string} name - The name to greet (must be 1-50 chars, letters/spaces/hyphens/apostrophes only)
- * @param {string} [appName="Project Template"] - The application name to reference in greeting
- * @returns {string} Formatted greeting message
- * @throws {Error} If name validation fails
- */
-function greet(name, appName = 'Project Template') {
-  // Input validation
-  if (typeof name !== 'string') {
-    throw new Error('Name must be a non-empty string');
-  }
-
-  const trimmedName = name.trim();
-  if (trimmedName.length === 0) {
-    throw new Error('Name cannot be empty after trimming whitespace');
-  }
-
-  // Rate limiting check
-  const identifier = 'greet_function'; // In a real app, use IP or user ID
-  if (!rateLimiter.isAllowed(identifier)) {
-    throw new Error('Rate limit exceeded. Please try again later.');
-  }
-
-  // Length validation
-  if (trimmedName.length < 1 || trimmedName.length > 50) {
-    throw new Error(
-      `Name must be between 1 and 50 characters (received ${trimmedName.length})`
-    );
-  }
-
-  // Input sanitization
-  const sanitizedName = sanitizeInput(trimmedName, { stripHtml: true });
-
-  // Character validation - only allow letters, spaces, hyphens, and apostrophes
-  if (!/^[a-zA-Z\s\-']+$/.test(sanitizedName)) {
-    throw new Error(
-      'Name can only contain letters, spaces, hyphens, and apostrophes'
-    );
-  }
-
-  return `Hello, ${sanitizedName}! Welcome to ${appName}`;
-}
-
-/**
  * Get comprehensive application information
  * @returns {Object} Application info including runtime details
  */
@@ -390,6 +266,33 @@ function getAppInfo() {
     nodeVersion: process.version,
     platform: process.platform,
   };
+}
+
+/**
+ * Generate a personalized greeting message
+ * @param {string} name - The name to greet
+ * @param {string} [appName='Project Template'] - The app name for the greeting
+ * @returns {string} Greeting message
+ */
+function greet(name, appName = 'Project Template') {
+  if (typeof name !== 'string' || !name.trim()) {
+    throw new Error('Name must be a non-empty string');
+  }
+  const trimmed = name.trim();
+  if (!trimmed) {
+    throw new Error('Name cannot be empty after trimming');
+  }
+  if (trimmed.length > 50) {
+    throw new Error(
+      `Name must be between 1 and 50 characters (received ${trimmed.length})`
+    );
+  }
+  if (!/^[a-zA-Z\s\-']+$/.test(trimmed)) {
+    throw new Error(
+      'Name can only contain letters, spaces, hyphens, and apostrophes'
+    );
+  }
+  return `Hello, ${trimmed}! Welcome to ${appName}`;
 }
 
 /**
@@ -416,50 +319,6 @@ function logStartupInfo() {
 // =============================================================================
 // MAIN APPLICATION LOGIC
 // =============================================================================
-
-/**
- * Initialize the application with configuration and services
- * @returns {Promise<void>}
- */
-async function initialize() {
-  try {
-    // Load and validate configuration
-    appConfig = await loadConfiguration();
-
-    // Log startup information
-    logStartupInfo();
-
-    // Create Express server
-    const app = createServer();
-
-    // Start the server
-    const server = app.listen(appConfig.port, () => {
-      logger.info(`🚀 Server is running on http://localhost:${appConfig.port}`);
-      logger.info(`📁 Serving static files from: ${__dirname}`);
-    });
-
-    // Handle server errors
-    server.on('error', error => {
-      logger.error('❌ Server error:', error.message);
-      process.exit(1);
-    });
-
-    // Demonstrate core functionality
-    logger.info('\n📝 Example Usage:');
-    logger.info(greet('Developer', appConfig.appName));
-    logger.info(greet('World', appConfig.appName));
-
-    // Display comprehensive app information
-    const appInfo = getAppInfo();
-    logger.info('\n📊 Application Info:');
-    logger.info(JSON.stringify(appInfo, null, 2));
-
-    logger.info('\n✅ Application initialized successfully!');
-  } catch (error) {
-    logger.error('❌ Application initialization failed:', error.message);
-    process.exit(1);
-  }
-}
 
 /**
  * Graceful shutdown handler
@@ -520,24 +379,8 @@ process.on('unhandledRejection', (reason, promise) => {
 process.on('SIGINT', gracefulShutdown);
 process.on('SIGTERM', gracefulShutdown);
 
-// Start the application
-if (require.main === module) {
-  initialize().catch(error => {
-    logger.error('Failed to start application:', error);
-    process.exit(1);
-  });
-}
-
 // =============================================================================
 // EXPORTS
 // =============================================================================
 
-module.exports = {
-  greet,
-  getAppInfo,
-  loadConfiguration,
-  initialize,
-  sanitizeInput,
-  isSensitiveValue,
-  RateLimiter,
-};
+module.exports = { app, greet };
