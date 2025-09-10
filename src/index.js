@@ -1,19 +1,18 @@
 /**
- * Example Node.js Application Entry Point
+ * Vercel Serverless Function Entry Point
  *
- * This file demonstrates a well-structured Node.js application with:
+ * This file demonstrates a well-structured serverless function with:
  * - Proper error handling
  * - Environment configuration management
  * - Modular code organization
  * - Comprehensive logging
- * - Graceful shutdown handling
+ * - Serverless-compatible design
  */
 
 const path = require('path');
-const express = require('express');
-const dotenv = require('dotenv');
 const fs = require('fs');
-const fsPromises = fs.promises;
+const dotenv = require('dotenv');
+const url = require('url');
 
 // =============================================================================
 // LOGGING UTILITIES
@@ -29,129 +28,15 @@ const logger = {
   debug: (message, ...args) => console.debug(`🐛 ${message}`, ...args),
 };
 
-// Global configuration object
-global.appConfig = null;
-
-/**
- * Check if a configuration value appears to contain sensitive information
- * @param {string} key - Configuration key
- * @param {string} value - Configuration value
- * @returns {boolean} True if value appears sensitive
- */
-function isSensitiveValue(key, value) {
-  const sensitiveKeys = ['password', 'secret', 'key', 'token', 'credential'];
-  const sensitivePatterns = [
-    /^[a-zA-Z0-9+/=]{10,}$/, // Base64-like
-    /^[a-f0-9]{32,}$/i, // Hex hash
-  ];
-
-  const lowerKey = key.toLowerCase();
-  const lowerValue = value.toLowerCase();
-
-  // Check key name
-  if (sensitiveKeys.some(sensitive => lowerKey.includes(sensitive))) {
-    return true;
-  }
-
-  // Check value patterns
-  if (sensitivePatterns.some(pattern => pattern.test(value))) {
-    return true;
-  }
-
-  // Check for common secret indicators
-  if (
-    lowerValue.includes('secret') ||
-    lowerValue.includes('password') ||
-    lowerValue.includes('token') ||
-    lowerValue.includes('key')
-  ) {
-    return true;
-  }
-
-  return false;
-}
-
-// =============================================================================
-// EXPRESS SERVER SETUP
-// =============================================================================
-
-/**
- * Create and configure Express application
- */
-function createServer() {
-  const app = express();
-
-  // Middleware for logging requests
-  app.use((req, res, next) => {
-    const timestamp = new Date().toISOString();
-    logger.info(`[${timestamp}] ${req.method} ${req.url} - ${req.ip}`);
-    next();
-  });
-
-  // Serve static files from project root directory
-  app.use(express.static(path.join(__dirname, '..')));
-
-  // Also serve src directory for backward compatibility
-  app.use('/src', express.static(__dirname));
-
-  // Specific routes for package.json and README.md
-  app.get('/package.json', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'package.json'));
-  });
-
-  app.get('/README.md', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'README.md'));
-  });
-
-  // Update the log message to reflect the correct directory
-  logger.info(`📁 Serving static files from: ${path.join(__dirname, '..')}`);
-
-  // API endpoint for app info
-  app.get('/api/info', (req, res) => {
-    if (!global.appConfig) {
-      return res.status(500).json({ error: 'Application not initialized' });
-    }
-    res.json(getAppInfo());
-  });
-
-  // Root route
-  app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
-  });
-
-  // API endpoint for greeting
-  app.get('/api/greet/:name', (req, res) => {
-    try {
-      const { name } = req.params;
-      const appName = req.query.appName || 'Project Template';
-      const greeting = greet(name, appName);
-      res.json({ greeting });
-    } catch (error) {
-      res.status(400).json({ error: error.message });
-    }
-  });
-
-  return app;
-}
-
-// Load configuration synchronously and create app
-if (process.env.NODE_ENV !== 'test') {
-  (async () => {
-    global.appConfig = await loadConfiguration();
-    logStartupInfo();
-  })();
-}
-const app = createServer();
-
 // =============================================================================
 // CONFIGURATION MANAGEMENT
 // =============================================================================
 
 /**
- * Load and validate environment configuration
- * @returns {Promise<Object>} Configuration object
+ * Load and validate environment configuration synchronously
+ * @returns {Object} Configuration object
  */
-async function loadConfiguration() {
+function loadConfiguration() {
   // Check if running in CI environment
   const isCI =
     process.env.NODE_ENV === 'production' || process.env.CI === 'true';
@@ -166,7 +51,7 @@ async function loadConfiguration() {
 
     // Check if .env file exists and load it
     try {
-      await fsPromises.access(envPath);
+      fs.accessSync(envPath, fs.constants.R_OK);
       logger.info(`📄 Loading configuration from: ${envPath}`);
 
       // Load environment variables with error handling
@@ -259,6 +144,48 @@ async function loadConfiguration() {
   }
 }
 
+/**
+ * Check if a configuration value appears to contain sensitive information
+ * @param {string} key - Configuration key
+ * @param {string} value - Configuration value
+ * @returns {boolean} True if value appears sensitive
+ */
+function isSensitiveValue(key, value) {
+  const sensitiveKeys = ['password', 'secret', 'key', 'token', 'credential'];
+  const sensitivePatterns = [
+    /^[a-zA-Z0-9+/=]{10,}$/, // Base64-like
+    /^[a-f0-9]{32,}$/i, // Hex hash
+  ];
+
+  const lowerKey = key.toLowerCase();
+  const lowerValue = value.toLowerCase();
+
+  // Check key name
+  if (sensitiveKeys.some(sensitive => lowerKey.includes(sensitive))) {
+    return true;
+  }
+
+  // Check value patterns
+  if (sensitivePatterns.some(pattern => pattern.test(value))) {
+    return true;
+  }
+
+  // Check for common secret indicators
+  if (
+    lowerValue.includes('secret') ||
+    lowerValue.includes('password') ||
+    lowerValue.includes('token') ||
+    lowerValue.includes('key')
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+// Load configuration synchronously at startup
+const appConfig = loadConfiguration();
+
 // =============================================================================
 // BUSINESS LOGIC
 // =============================================================================
@@ -268,18 +195,12 @@ async function loadConfiguration() {
  * @returns {Object} Application info including runtime details
  */
 function getAppInfo() {
-  if (!global.appConfig) {
-    throw new TypeError(
-      'Application not initialized. Call initialize() first.'
-    );
-  }
-
   return {
-    name: global.appConfig.appName,
-    version: global.appConfig.appVersion,
-    environment: global.appConfig.environment,
-    port: global.appConfig.port,
-    debug: global.appConfig.debug,
+    name: appConfig.appName,
+    version: appConfig.appVersion,
+    environment: appConfig.environment,
+    port: appConfig.port,
+    debug: appConfig.debug,
     uptime: process.uptime(),
     nodeVersion: process.version,
     platform: process.platform,
@@ -311,19 +232,6 @@ function greet(name, appName = 'Project Template') {
     );
   }
   return `Hello, ${trimmed}! Welcome to ${appName}`;
-}
-
-/**
- * Initialize the application by loading configuration and logging startup info
- */
-async function initialize() {
-  try {
-    global.appConfig = await loadConfiguration();
-    logStartupInfo();
-  } catch (error) {
-    logger.error('❌ Application initialization failed:', error.message);
-    process.exit(1);
-  }
 }
 
 /**
@@ -378,102 +286,119 @@ function sanitizeInput(input, options = {}) {
   return sanitized;
 }
 
+// =============================================================================
+// SERVERLESS HANDLER
+// =============================================================================
+
 /**
- * Log detailed application startup information
+ * Vercel serverless function handler
+ * @param {Object} req - Request object
+ * @param {Object} res - Response object
  */
-function logStartupInfo() {
-  if (!global.appConfig) {
-    logger.warn('Cannot log startup info: configuration not loaded');
+function handler(req, res) {
+  // Set CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
     return;
   }
 
-  logger.info('🚀 Starting Node.js application...');
+  // Log request
+  const timestamp = new Date().toISOString();
   logger.info(
-    `📱 App: ${global.appConfig.appName} v${global.appConfig.appVersion}`
-  );
-  logger.info(`🌍 Environment: ${global.appConfig.environment}`);
-  logger.info(`🔧 Node.js: ${process.version}`);
-  logger.info(`📂 Platform: ${process.platform}`);
-  logger.info(`🚪 Port: ${global.appConfig.port}`);
-
-  if (global.appConfig.debug) {
-    logger.debug('🐛 Debug mode enabled');
-  }
-}
-
-// =============================================================================
-// MAIN APPLICATION LOGIC
-// =============================================================================
-
-/**
- * Graceful shutdown handler
- */
-function gracefulShutdown() {
-  logger.info('Received shutdown signal. Cleaning up...');
-
-  // Perform cleanup operations
-  const cleanupPromises = [];
-
-  // Example: Clear any timers
-  if (global.gc && typeof global.gc === 'function') {
-    // Force garbage collection if available (not recommended in production)
-    global.gc();
-  }
-
-  // Example: Close any open file handles or connections
-  // In a real app, close database connections, HTTP servers, etc.
-  // For now, simulate async cleanup
-  cleanupPromises.push(
-    new Promise(resolve => {
-      setTimeout(() => {
-        logger.info('Simulated cleanup of resources completed');
-        resolve();
-      }, 100);
-    })
+    `[${timestamp}] ${req.method} ${req.url} - ${req.headers['x-forwarded-for'] || req.connection.remoteAddress}`
   );
 
-  // Wait for all cleanup to complete
-  Promise.all(cleanupPromises)
-    .then(() => {
-      logger.info('Cleanup completed. Exiting...');
-      process.exit(0);
-    })
-    .catch(error => {
-      logger.error('Error during cleanup:', error);
-      process.exit(1);
-    });
+  try {
+    const parsedUrl = url.parse(req.url, true);
+    const { pathname, query } = parsedUrl;
+
+    if (req.method === 'GET') {
+      if (pathname === '/') {
+        // Serve index.html
+        const filePath = path.join(__dirname, 'index.html');
+        try {
+          const content = fs.readFileSync(filePath, 'utf8');
+          res.setHeader('Content-Type', 'text/html');
+          res.status(200).send(content);
+        } catch (err) {
+          logger.error('Error reading index.html:', err.message);
+          res.status(404).json({ error: 'File not found' });
+        }
+      } else if (pathname === '/package.json') {
+        // Serve package.json
+        const filePath = path.join(__dirname, '..', 'package.json');
+        try {
+          const content = fs.readFileSync(filePath, 'utf8');
+          res.setHeader('Content-Type', 'application/json');
+          res.status(200).send(content);
+        } catch (err) {
+          logger.error('Error reading package.json:', err.message);
+          res.status(404).json({ error: 'File not found' });
+        }
+      } else if (pathname === '/README.md') {
+        // Serve README.md
+        const filePath = path.join(__dirname, '..', 'README.md');
+        try {
+          const content = fs.readFileSync(filePath, 'utf8');
+          res.setHeader('Content-Type', 'text/markdown');
+          res.status(200).send(content);
+        } catch (err) {
+          logger.error('Error reading README.md:', err.message);
+          res.status(404).json({ error: 'File not found' });
+        }
+      } else if (pathname === '/api/info') {
+        // API endpoint for app info
+        const info = getAppInfo();
+        res.json(info);
+      } else if (pathname.startsWith('/api/greet/')) {
+        // API endpoint for greeting
+        const [, name] = pathname.split('/api/greet/');
+        if (!name) {
+          res.status(400).json({ error: 'Name parameter is required' });
+          return;
+        }
+        try {
+          const appName = query.appName || 'Project Template';
+          const greeting = greet(name, appName);
+          res.json({ greeting });
+        } catch (err) {
+          res.status(400).json({ error: err.message });
+        }
+      } else if (pathname === '/api/health') {
+        // Health check endpoint
+        res.json({ status: 'ok', timestamp: new Date().toISOString() });
+      } else if (pathname === '/api/config') {
+        // Config endpoint (without sensitive info)
+        res.json({
+          appName: appConfig.appName,
+          appVersion: appConfig.appVersion,
+          environment: appConfig.environment,
+          debug: appConfig.debug,
+        });
+      } else {
+        res.status(404).json({ error: 'Not found' });
+      }
+    } else {
+      res.status(405).json({ error: 'Method not allowed' });
+    }
+  } catch (err) {
+    logger.error('Handler error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 }
-
-// =============================================================================
-// APPLICATION ENTRY POINT
-// =============================================================================
-
-// Handle uncaught exceptions
-process.on('uncaughtException', error => {
-  logger.error('Uncaught Exception:', error);
-  process.exit(1);
-});
-
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (reason, promise) => {
-  logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
-  process.exit(1);
-});
-
-// Handle shutdown signals
-process.on('SIGINT', gracefulShutdown);
-process.on('SIGTERM', gracefulShutdown);
 
 // =============================================================================
 // EXPORTS
 // =============================================================================
 
-module.exports = {
-  app,
-  greet,
-  initialize,
-  loadConfiguration,
-  sanitizeInput,
-  isSensitiveValue,
-  getAppInfo,
-};
+module.exports = handler;
+
+module.exports.greet = greet;
+module.exports.sanitizeInput = sanitizeInput;
+module.exports.isSensitiveValue = isSensitiveValue;
+module.exports.getAppInfo = getAppInfo;
