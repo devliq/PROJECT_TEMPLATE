@@ -9,6 +9,24 @@
     "group:recommended",
     "workarounds:all"
   ],
+  "managers": [
+    {
+      "manager": "poetry",
+      "fileMatch": ["pyproject.toml"]
+    },
+    {
+      "manager": "docker",
+      "fileMatch": ["Dockerfile", "docker-compose.yml"]
+    },
+    {
+      "manager": "terraform",
+      "fileMatch": ["deploy/terraform/main.tf"]
+    },
+    {
+      "manager": "nix",
+      "fileMatch": ["flake.nix", "shell.nix"]
+    }
+  ],
   "schedule": ["before 4am on Monday"],
   "timezone": "America/New_York",
   "labels": ["dependencies"],
@@ -94,6 +112,98 @@
       "matchDatasources": ["npm", "pypi"],
       "labels": ["security", "high-priority"],
       "automerge": true
+    },
+    {
+      "description": "Group poetry patch updates",
+      "matchManagers": ["poetry"],
+      "matchUpdateTypes": ["patch"],
+      "groupName": "poetry patch updates",
+      "automerge": true,
+      "automergeType": "pr"
+    },
+    {
+      "description": "Group poetry minor updates",
+      "matchManagers": ["poetry"],
+      "matchUpdateTypes": ["minor"],
+      "groupName": "poetry minor updates",
+      "automerge": true,
+      "automergeType": "pr"
+    },
+    {
+      "description": "Group poetry major updates separately",
+      "matchManagers": ["poetry"],
+      "matchUpdateTypes": ["major"],
+      "groupName": "poetry major updates",
+      "labels": ["dependencies", "major-update"]
+    },
+    {
+      "description": "Group docker patch updates",
+      "matchManagers": ["docker"],
+      "matchUpdateTypes": ["patch"],
+      "groupName": "docker patch updates",
+      "automerge": true,
+      "automergeType": "pr"
+    },
+    {
+      "description": "Group docker minor updates",
+      "matchManagers": ["docker"],
+      "matchUpdateTypes": ["minor"],
+      "groupName": "docker minor updates",
+      "automerge": true,
+      "automergeType": "pr"
+    },
+    {
+      "description": "Group docker major updates separately",
+      "matchManagers": ["docker"],
+      "matchUpdateTypes": ["major"],
+      "groupName": "docker major updates",
+      "labels": ["dependencies", "major-update"]
+    },
+    {
+      "description": "Group terraform patch updates",
+      "matchManagers": ["terraform"],
+      "matchUpdateTypes": ["patch"],
+      "groupName": "terraform patch updates",
+      "automerge": true,
+      "automergeType": "pr"
+    },
+    {
+      "description": "Group terraform minor updates",
+      "matchManagers": ["terraform"],
+      "matchUpdateTypes": ["minor"],
+      "groupName": "terraform minor updates",
+      "automerge": true,
+      "automergeType": "pr"
+    },
+    {
+      "description": "Group terraform major updates separately",
+      "matchManagers": ["terraform"],
+      "matchUpdateTypes": ["major"],
+      "groupName": "terraform major updates",
+      "labels": ["dependencies", "major-update"]
+    },
+    {
+      "description": "Group nix patch updates",
+      "matchManagers": ["nix"],
+      "matchUpdateTypes": ["patch"],
+      "groupName": "nix patch updates",
+      "automerge": true,
+      "automergeType": "pr"
+    },
+    {
+      "description": "Group nix minor updates",
+      "matchManagers": ["nix"],
+      "matchUpdateTypes": ["minor"],
+      "groupName": "nix minor updates",
+      "automerge": true,
+      "automergeType": "pr"
+    },
+    {
+      "description": "Group nix major updates separately",
+      "matchManagers": ["nix"],
+      "matchUpdateTypes": ["major"],
+      "groupName": "nix major updates",
+      "labels": ["dependencies", "major-update"]
     }
   ],
   "vulnerabilityAlerts": {

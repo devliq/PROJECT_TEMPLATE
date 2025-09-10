@@ -1,0 +1,26 @@
+name: Renovate
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  pull_request:
+
+jobs:
+  renovate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+      repository-projects: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@main
+      - name: Run Renovate
+        uses: renovatebot/github-action@main
+        with:
+          configurationFile: renovate.json
+          token: ${{ secrets.RENOVATE_TOKEN }}
+        env:
+          RENOVATE_GROUP_ALL_DEPS: true
+          RENOVATE_PACKAGE_RULES: '[{"matchPackageNames": ["node"], "matchUpdateTypes": ["major"], "enabled": false}]'
