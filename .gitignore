@@ -658,3 +658,4 @@ config/loki-config.yaml.tmp
 config/promtail-config.yaml.tmp
 # Alerting temp
 config/alerting_rules.yml.tmp
+.vercel
