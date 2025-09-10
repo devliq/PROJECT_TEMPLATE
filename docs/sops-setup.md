@@ -69,3 +69,93 @@ To update secrets:
 2. Edit `secrets.yaml` with new values
 3. Re-encrypt: `./sops --encrypt --age age1e97cf60y7smxl6kv3lyq6qt5ak6hr790agccxcd4jy7klglcpecq8qrjla secrets.yaml > secrets.enc.yaml`
 4. Remove temporary file: `rm secrets.yaml`
+
+## Migration to Vercel Environment Variables
+
+For projects deploying to Vercel, you can migrate from SOPS-encrypted secrets to Vercel's built-in environment variable management for simplified deployment and better security.
+
+### Migration Steps
+
+1. **Decrypt existing secrets:**
+
+```bash
+./sops --decrypt --age age-key.txt secrets.enc.yaml > secrets.yaml
+```
+
+2. **Install Vercel CLI:**
+
+```bash
+npm install -g vercel
+vercel login
+```
+
+3. **Set environment variables in Vercel:**
+
+```bash
+# Read values from secrets.yaml and set them in Vercel
+# For each secret in secrets.yaml:
+vercel env add VARIABLE_NAME
+# Follow prompts to enter the value
+
+# Or set multiple at once for different environments:
+vercel env add DATABASE_URL production
+vercel env add API_KEY production
+vercel env add JWT_SECRET production
+```
+
+4. **Update application code:**
+
+```javascript
+// Before (using SOPS-decrypted files):
+const fs = require('fs');
+const secrets = YAML.parse(fs.readFileSync('secrets.yaml', 'utf8'));
+const databaseUrl = secrets.DATABASE_URL;
+
+// After (using Vercel environment variables):
+const databaseUrl = process.env.DATABASE_URL;
+const apiKey = process.env.API_KEY;
+const jwtSecret = process.env.JWT_SECRET;
+```
+
+5. **Update deployment configuration:**
+
+```bash
+# Remove SOPS-related files from deployment
+rm secrets.enc.yaml age-key.txt sops
+```
+
+6. **Update CI/CD pipeline:**
+   Remove SOPS decryption steps from GitHub Actions and rely on Vercel's environment variable management.
+
+### Benefits of Migration
+
+- **Simplified deployment**: No need to manage encryption keys in CI/CD
+- **Better security**: Secrets managed by Vercel's secure infrastructure
+- **Automatic scaling**: Environment variables automatically available across all Vercel instances
+- **Version control**: No encrypted files in repository
+- **Easy management**: GUI and CLI tools for environment variable management
+
+### Rollback Plan
+
+If you need to rollback to SOPS:
+
+1. Keep a backup of `secrets.enc.yaml` and `age-key.txt`
+2. Restore SOPS decryption in CI/CD pipeline
+3. Update application code to read from decrypted files again
+
+### Environment-Specific Variables
+
+Vercel supports different environments:
+
+```bash
+# Production
+vercel env add DATABASE_URL production
+
+# Preview (for all preview deployments)
+vercel env add DATABASE_URL preview
+
+# Development (for local development)
+vercel env add DATABASE_URL development
+```
+
+This allows different configurations for different deployment environments without code changes.

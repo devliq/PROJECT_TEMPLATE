@@ -14,7 +14,7 @@ const config = {
     port: 5432,
     name: process.env.DB_NAME || 'myproject',
     username: process.env.DB_USERNAME || 'user',
-    password: process.env.DB_PASSWORD || '',
+    password: process.env.DB_PASSWORD || null,
   },
   api: {
     baseUrl: process.env.API_BASE_URL || 'https://api.example.com',

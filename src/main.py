@@ -281,7 +281,8 @@ def validate_config(config: AppConfig) -> None:
         )
 
     if not config.app_name.strip():
-        raise ConfigurationError("app_name cannot be empty")
+        logging.warning("app_name is empty, using default")
+        config.app_name = "Project Template"
 
     if not config.app_version.strip():
         raise ConfigurationError("app_version cannot be empty")

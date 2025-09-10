@@ -254,7 +254,9 @@ async function loadConfiguration() {
     // Validate and parse environment variables
     const appName = process.env.APP_NAME ?? 'Project Template';
     if (typeof appName !== 'string' || appName.trim().length === 0) {
-      throw new Error('APP_NAME must be a non-empty string');
+      logger.warn(
+        'APP_NAME is not set or empty, using default: Project Template'
+      );
     }
 
     const appVersion = process.env.APP_VERSION || '1.0.0';

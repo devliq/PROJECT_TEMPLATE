@@ -677,6 +677,26 @@ terraform apply
 ./scripts/gitops-deploy.sh production
 ```
 
+5. **Vercel Deployment** (Alternative):
+
+```bash
+# Install Vercel CLI
+npm install -g vercel
+
+# Login to Vercel
+vercel login
+
+# Deploy to Vercel
+vercel
+
+# Or deploy directly to production
+vercel --prod
+
+# Set environment variables
+vercel env add DATABASE_URL
+vercel env add API_KEY
+```
+
 ## GitHub Repository Setup
 
 Before using the CI/CD workflows, configure the following secrets in your GitHub repository settings:
