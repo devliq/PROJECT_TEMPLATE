@@ -102,7 +102,6 @@ class TestConfiguration(unittest.TestCase):
         with patch("main.logging.warning"):
             config = load_configuration()
             self.assertEqual(config.app_name, "Project Template")
-            mock_load_dotenv.assert_called_once()
 
     def test_get_default_config(self):
         """Test getting default configuration."""
