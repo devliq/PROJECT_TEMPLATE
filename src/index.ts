@@ -221,21 +221,36 @@ class Logger {
  */
 async function loadConfiguration(): Promise<AppConfig> {
   try {
-    // Resolve the .env file path relative to the project root
-    const envPath = path.resolve(__dirname, '../config/.env');
+    // Check if running in CI environment
+    const isCI =
+      process.env.NODE_ENV === 'production' || process.env.CI === 'true';
 
-    // Check if .env file exists
-    try {
-      await fs.access(envPath);
-    } catch {
-      console.warn('⚠️  .env file not found. Using default configuration.');
-      return getDefaultConfig();
-    }
+    if (isCI) {
+      console.log(
+        '🔧 Running in CI environment. Using environment variables directly.'
+      );
+    } else {
+      // Resolve the .env file path relative to the current working directory
+      const envPath = path.resolve(process.cwd(), '.env');
 
-    // Load environment variables
-    const dotenvConfig = dotenv.config({ path: envPath });
-    if (dotenvConfig.error) {
-      throw dotenvConfig.error;
+      // Check if .env file exists and load it
+      try {
+        await fs.access(envPath);
+        console.log(`📄 Loading configuration from: ${envPath}`);
+
+        // Load environment variables with error handling
+        const dotenvConfig = dotenv.config({ path: envPath });
+        if (dotenvConfig.error) {
+          throw new ConfigurationError(
+            `Failed to load configuration: ${dotenvConfig.error.message}`,
+            dotenvConfig.error
+          );
+        } else {
+          console.log('✅ .env file loaded successfully.');
+        }
+      } catch {
+        console.warn('⚠️ .env file not found. Using default configuration.');
+      }
     }
 
     const config: AppConfig = {
@@ -307,20 +322,6 @@ function validateConfig(config: AppConfig): void {
       'appVersion'
     );
   }
-}
-
-/**
- * Get default configuration values
- * @returns Default configuration
- */
-function getDefaultConfig(): AppConfig {
-  return {
-    appName: 'Project Template',
-    appVersion: '1.0.0',
-    environment: 'development',
-    port: 3000,
-    debug: false,
-  };
 }
 
 // =============================================================================

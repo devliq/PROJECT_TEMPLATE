@@ -9,6 +9,7 @@
     "group:recommended",
     "workarounds:all"
   ],
+  "autodiscover": true,
   "schedule": ["before 4am on Monday"],
   "timezone": "America/New_York",
   "labels": ["dependencies"],
@@ -17,7 +18,7 @@
   "packageRules": [
     {
       "description": "Group npm patch updates",
-      "matchPackageManagers": ["npm"],
+      "matchManagers": ["npm"],
       "matchUpdateTypes": ["patch"],
       "groupName": "npm patch updates",
       "automerge": true,
@@ -25,7 +26,7 @@
     },
     {
       "description": "Group npm minor updates",
-      "matchPackageManagers": ["npm"],
+      "matchManagers": ["npm"],
       "matchUpdateTypes": ["minor"],
       "groupName": "npm minor updates",
       "automerge": true,
@@ -33,14 +34,14 @@
     },
     {
       "description": "Group npm major updates separately",
-      "matchPackageManagers": ["npm"],
+      "matchManagers": ["npm"],
       "matchUpdateTypes": ["major"],
       "groupName": "npm major updates",
       "labels": ["dependencies", "major-update"]
     },
     {
       "description": "Group pip patch updates",
-      "matchPackageManagers": ["pip", "pip_setup"],
+      "matchManagers": ["pip", "setuptools"],
       "matchUpdateTypes": ["patch"],
       "groupName": "pip patch updates",
       "automerge": true,
@@ -48,7 +49,7 @@
     },
     {
       "description": "Group pip minor updates",
-      "matchPackageManagers": ["pip", "pip_setup"],
+      "matchManagers": ["pip", "setuptools"],
       "matchUpdateTypes": ["minor"],
       "groupName": "pip minor updates",
       "automerge": true,
@@ -56,14 +57,14 @@
     },
     {
       "description": "Group pip major updates separately",
-      "matchPackageManagers": ["pip", "pip_setup"],
+      "matchManagers": ["pip", "setuptools"],
       "matchUpdateTypes": ["major"],
       "groupName": "pip major updates",
       "labels": ["dependencies", "major-update"]
     },
     {
       "description": "Group GitHub Actions patch updates",
-      "matchPackageManagers": ["github-actions"],
+      "matchManagers": ["github-actions"],
       "matchUpdateTypes": ["patch"],
       "groupName": "GitHub Actions patch updates",
       "automerge": true,
@@ -71,20 +72,20 @@
     },
     {
       "description": "Group GitHub Actions minor updates",
-      "matchPackageManagers": ["github-actions"],
+      "matchManagers": ["github-actions"],
       "matchUpdateTypes": ["minor"],
       "groupName": "GitHub Actions minor updates"
     },
     {
       "description": "Group GitHub Actions major updates separately",
-      "matchPackageManagers": ["github-actions"],
+      "matchManagers": ["github-actions"],
       "matchUpdateTypes": ["major"],
       "groupName": "GitHub Actions major updates",
       "labels": ["dependencies", "major-update", "github-actions"]
     },
     {
       "description": "Respect Node.js engine requirements",
-      "matchPackageManagers": ["npm"],
+      "matchManagers": ["npm"],
       "matchPackageNames": ["node"],
       "allowedVersions": ">=20.17.0"
     },

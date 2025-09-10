@@ -12,6 +12,7 @@
 const path = require('path');
 const fs = require('fs').promises;
 const express = require('express');
+const dotenv = require('dotenv');
 
 // =============================================================================
 // LOGGING UTILITIES
@@ -164,31 +165,35 @@ async function initialize() {
  * @returns {Object} Configuration object
  */
 async function loadConfiguration() {
-  // Resolve the .env file path relative to the project root
-  const envPath = path.resolve(__dirname, '../.env');
+  // Check if running in CI environment
+  const isCI =
+    process.env.NODE_ENV === 'production' || process.env.CI === 'true';
 
-  // Check if .env file exists
-  try {
-    await fs.access(envPath);
-  } catch {
-    logger.warn('.env file not found. Using default configuration.');
-    return getDefaultConfig();
-  }
-
-  // Load environment variables with error handling
-  let dotenvConfig;
-  try {
-    dotenvConfig = require('dotenv').config({ path: envPath });
-    if (!dotenvConfig) {
-      throw new Error('Failed to load dotenv configuration');
-    }
-    if (dotenvConfig.error) {
-      throw dotenvConfig.error;
-    }
-  } catch (error) {
-    throw new Error(
-      `Failed to load configuration: ${error.message || String(error)}`
+  if (isCI) {
+    logger.info(
+      '🔧 Running in CI environment. Using environment variables directly.'
     );
+  } else {
+    // Resolve the .env file path relative to the current working directory
+    const envPath = path.resolve(process.cwd(), '.env');
+
+    // Check if .env file exists and load it
+    try {
+      await fs.access(envPath);
+      logger.info(`📄 Loading configuration from: ${envPath}`);
+
+      // Load environment variables with error handling
+      const dotenvConfig = dotenv.config({ path: envPath });
+      if (dotenvConfig.error) {
+        throw new Error(
+          `Failed to load configuration: ${dotenvConfig.error.message}`
+        );
+      } else {
+        logger.info('✅ .env file loaded successfully.');
+      }
+    } catch {
+      logger.warn('.env file not found. Using default configuration.');
+    }
   }
 
   try {
@@ -246,22 +251,14 @@ async function loadConfiguration() {
     return config;
   } catch (error) {
     logger.error('Failed to load configuration:', error.message);
-    return getDefaultConfig();
+    return {
+      appName: 'Project Template',
+      appVersion: '1.0.0',
+      environment: 'development',
+      port: 3000,
+      debug: false,
+    };
   }
-}
-
-/**
- * Get default configuration values
- * @returns {Object} Default configuration
- */
-function getDefaultConfig() {
-  return {
-    appName: 'Project Template',
-    appVersion: '1.0.0',
-    environment: 'development',
-    port: 3000,
-    debug: false,
-  };
 }
 
 // =============================================================================

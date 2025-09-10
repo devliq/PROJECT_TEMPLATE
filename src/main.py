@@ -203,20 +203,31 @@ def load_configuration() -> AppConfig:
         ConfigurationError: If configuration loading fails
     """
     try:
-        # Resolve the .env file path relative to the project root
-        env_path = Path(__file__).parent.parent / "config" / ".env"
+        # Check if running in CI environment
+        is_ci = os.getenv('NODE_ENV') == 'production' or os.getenv('CI') == 'true'
 
-        # Check if .env file exists
-        if not env_path.exists():
-            logging.warning("⚠️  .env file not found. Using default configuration.")
-            return get_default_config()
+        if is_ci:
+            logging.info("🔧 Running in CI environment. Using environment variables directly.")
+        else:
+            # Resolve the .env file path relative to the current working directory
+            env_path = Path(os.getcwd()) / ".env"
 
-        # Load environment variables with error handling for dotenv
-        try:
-            load_dotenv(env_path)
-        except ImportError:
-            logging.warning("dotenv not available. Using default configuration.")
-            return get_default_config()
+            # Check if .env file exists and load it
+            if not env_path.exists():
+                logging.warning(f"⚠️  .env file not found at {env_path}. Using environment variables.")
+            else:
+                logging.info(f"📄 Loading configuration from: {env_path}")
+
+                # Load environment variables with error handling for dotenv
+                try:
+                    load_dotenv(env_path)
+                    logging.info("✅ .env file loaded successfully.")
+                except ImportError:
+                    logging.warning("dotenv not available. Using default configuration.")
+                    return get_default_config()
+                except Exception as error:
+                    logging.warning(f"⚠️  Failed to load .env file: {error}")
+                    logging.info("🔄 Falling back to environment variables.")
 
         config = AppConfig(
             app_name=os.getenv("APP_NAME", "Project Template"),
