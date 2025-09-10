@@ -12,6 +12,8 @@
 const path = require('path');
 const express = require('express');
 const dotenv = require('dotenv');
+const fs = require('fs');
+const fsPromises = fs.promises;
 
 // =============================================================================
 // LOGGING UTILITIES
@@ -28,7 +30,7 @@ const logger = {
 };
 
 // Global configuration object
-let appConfig = null;
+global.appConfig = null;
 
 /**
  * Check if a configuration value appears to contain sensitive information
@@ -106,7 +108,7 @@ function createServer() {
 
   // API endpoint for app info
   app.get('/api/info', (req, res) => {
-    if (!appConfig) {
+    if (!global.appConfig) {
       return res.status(500).json({ error: 'Application not initialized' });
     }
     res.json(getAppInfo());
@@ -134,8 +136,10 @@ function createServer() {
 
 // Load configuration synchronously and create app
 if (process.env.NODE_ENV !== 'test') {
-  appConfig = loadConfiguration();
-  logStartupInfo();
+  (async () => {
+    global.appConfig = await loadConfiguration();
+    logStartupInfo();
+  })();
 }
 const app = createServer();
 
@@ -145,9 +149,9 @@ const app = createServer();
 
 /**
  * Load and validate environment configuration
- * @returns {Object} Configuration object
+ * @returns {Promise<Object>} Configuration object
  */
-function loadConfiguration() {
+async function loadConfiguration() {
   // Check if running in CI environment
   const isCI =
     process.env.NODE_ENV === 'production' || process.env.CI === 'true';
@@ -162,7 +166,7 @@ function loadConfiguration() {
 
     // Check if .env file exists and load it
     try {
-      require('fs').accessSync(envPath);
+      await fsPromises.access(envPath);
       logger.info(`📄 Loading configuration from: ${envPath}`);
 
       // Load environment variables with error handling
@@ -240,14 +244,18 @@ function loadConfiguration() {
 
     return config;
   } catch (error) {
-    logger.error('Failed to load configuration:', error.message);
-    return {
-      appName: 'Project Template',
-      appVersion: '1.0.0',
-      environment: 'development',
-      port: 3000,
-      debug: false,
-    };
+    if (error.message.includes('Failed to load configuration')) {
+      throw error;
+    } else {
+      logger.error('Failed to load configuration:', error.message);
+      return {
+        appName: 'Project Template',
+        appVersion: '1.0.0',
+        environment: 'development',
+        port: 3000,
+        debug: false,
+      };
+    }
   }
 }
 
@@ -260,18 +268,18 @@ function loadConfiguration() {
  * @returns {Object} Application info including runtime details
  */
 function getAppInfo() {
-  if (!appConfig) {
+  if (!global.appConfig) {
     throw new TypeError(
       'Application not initialized. Call initialize() first.'
     );
   }
 
   return {
-    name: appConfig.appName,
-    version: appConfig.appVersion,
-    environment: appConfig.environment,
-    port: appConfig.port,
-    debug: appConfig.debug,
+    name: global.appConfig.appName,
+    version: global.appConfig.appVersion,
+    environment: global.appConfig.environment,
+    port: global.appConfig.port,
+    debug: global.appConfig.debug,
     uptime: process.uptime(),
     nodeVersion: process.version,
     platform: process.platform,
@@ -306,22 +314,89 @@ function greet(name, appName = 'Project Template') {
 }
 
 /**
+ * Initialize the application by loading configuration and logging startup info
+ */
+async function initialize() {
+  try {
+    global.appConfig = await loadConfiguration();
+    logStartupInfo();
+  } catch (error) {
+    logger.error('❌ Application initialization failed:', error.message);
+    process.exit(1);
+  }
+}
+
+/**
+ * Sanitize input string by removing harmful characters and applying options
+ * @param {string} input - The input string to sanitize
+ * @param {Object} [options={}] - Sanitization options
+ * @param {boolean} [options.stripHtml=false] - Whether to strip HTML tags
+ * @param {number} [options.maxLength] - Maximum length of the sanitized string
+ * @returns {string} Sanitized string
+ */
+function sanitizeInput(input, options = {}) {
+  if (typeof input !== 'string') {
+    throw new Error('Input must be a string');
+  }
+
+  let sanitized = input;
+
+  // Remove null bytes and control characters
+  sanitized = sanitized
+    .split('')
+    .filter(char => {
+      const code = char.charCodeAt(0);
+      return code >= 32 && (code < 127 || code > 159);
+    })
+    .join('');
+
+  // Remove script tags
+  sanitized = sanitized.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
+
+  // Strip HTML if option is true
+  if (options.stripHtml) {
+    sanitized = sanitized.replace(/<[^>]*>/g, '');
+  }
+
+  // Trim
+  sanitized = sanitized.trim();
+
+  // Remove some chars if not stripping HTML
+  if (!options.stripHtml) {
+    sanitized = sanitized.replace(/[<>"'&]/g, '');
+  }
+
+  // Limit length
+  if (
+    options.maxLength &&
+    typeof options.maxLength === 'number' &&
+    options.maxLength > 0
+  ) {
+    sanitized = sanitized.slice(0, options.maxLength);
+  }
+
+  return sanitized;
+}
+
+/**
  * Log detailed application startup information
  */
 function logStartupInfo() {
-  if (!appConfig) {
+  if (!global.appConfig) {
     logger.warn('Cannot log startup info: configuration not loaded');
     return;
   }
 
   logger.info('🚀 Starting Node.js application...');
-  logger.info(`📱 App: ${appConfig.appName} v${appConfig.appVersion}`);
-  logger.info(`🌍 Environment: ${appConfig.environment}`);
+  logger.info(
+    `📱 App: ${global.appConfig.appName} v${global.appConfig.appVersion}`
+  );
+  logger.info(`🌍 Environment: ${global.appConfig.environment}`);
   logger.info(`🔧 Node.js: ${process.version}`);
   logger.info(`📂 Platform: ${process.platform}`);
-  logger.info(`🚪 Port: ${appConfig.port}`);
+  logger.info(`🚪 Port: ${global.appConfig.port}`);
 
-  if (appConfig.debug) {
+  if (global.appConfig.debug) {
     logger.debug('🐛 Debug mode enabled');
   }
 }
@@ -393,4 +468,12 @@ process.on('SIGTERM', gracefulShutdown);
 // EXPORTS
 // =============================================================================
 
-module.exports = app;
+module.exports = {
+  app,
+  greet,
+  initialize,
+  loadConfiguration,
+  sanitizeInput,
+  isSensitiveValue,
+  getAppInfo,
+};
