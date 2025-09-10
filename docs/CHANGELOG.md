@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Various configuration improvements for better development experience
+- vercel deployment runtime configuration
 
 ## [1.0.0] - 2024-01-01
 
