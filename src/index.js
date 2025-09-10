@@ -133,11 +133,27 @@ function createServer() {
 }
 
 // Load configuration and create app
-(async () => {
-  appConfig = await loadConfiguration();
-  logStartupInfo();
-})();
+if (process.env.NODE_ENV !== 'test') {
+  (async () => {
+    appConfig = await loadConfiguration();
+    logStartupInfo();
+  })();
+}
 const app = createServer();
+
+/**
+ * Initialize the application by loading configuration and logging startup info
+ * @returns {Promise<void>}
+ */
+async function initialize() {
+  try {
+    appConfig = await loadConfiguration();
+    logStartupInfo();
+  } catch (error) {
+    logger.error('❌ Application initialization failed:', error.message);
+    process.exit(1);
+  }
+}
 
 // =============================================================================
 // CONFIGURATION MANAGEMENT
@@ -253,7 +269,9 @@ function getDefaultConfig() {
  */
 function getAppInfo() {
   if (!appConfig) {
-    throw new Error('Application not initialized. Call initialize() first.');
+    throw new TypeError(
+      'Application not initialized. Call initialize() first.'
+    );
   }
 
   return {
@@ -275,7 +293,7 @@ function getAppInfo() {
  * @returns {string} Greeting message
  */
 function greet(name, appName = 'Project Template') {
-  if (typeof name !== 'string' || !name.trim()) {
+  if (typeof name !== 'string') {
     throw new Error('Name must be a non-empty string');
   }
   const trimmed = name.trim();
@@ -359,6 +377,102 @@ function gracefulShutdown() {
     });
 }
 
+/**
+ * Sanitize input string by removing potentially harmful content
+ * @param {string} input - The input string to sanitize
+ * @param {Object} [options] - Sanitization options
+ * @param {boolean} [options.stripHtml=false] - Whether to strip HTML tags
+ * @param {number} [options.maxLength] - Maximum length of the output
+ * @returns {string} Sanitized string
+ */
+function sanitizeInput(input, options = {}) {
+  if (typeof input !== 'string') {
+    throw new Error('Input must be a string');
+  }
+
+  let sanitized = input.trim();
+
+  // Remove null bytes and control characters
+  sanitized = sanitized.replace(/\0/g, '').replace(String.fromCharCode(31), '');
+
+  // Remove script tags
+  sanitized = sanitized.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
+
+  // Strip HTML if requested
+  if (options.stripHtml) {
+    sanitized = sanitized.replace(/<[^>]*>/g, '');
+  }
+
+  // Limit length if specified
+  if (options.maxLength && sanitized.length > options.maxLength) {
+    sanitized = sanitized.substring(0, options.maxLength);
+  }
+
+  return sanitized;
+}
+
+/**
+ * Rate limiter class to control request frequency per identifier
+ */
+class RateLimiter {
+  /**
+   * @param {number} windowMs - Time window in milliseconds
+   * @param {number} maxRequests - Maximum requests allowed in the window
+   */
+  constructor(windowMs = 900000, maxRequests = 100) {
+    this.windowMs = windowMs;
+    this.maxRequests = maxRequests;
+    this.requests = new Map();
+  }
+
+  /**
+   * Check if a request is allowed for the given identifier
+   * @param {string} identifier - Unique identifier (e.g., IP address, user ID)
+   * @returns {boolean} True if request is allowed
+   */
+  isAllowed(identifier) {
+    const now = Date.now();
+    const windowStart = now - this.windowMs;
+
+    if (!this.requests.has(identifier)) {
+      this.requests.set(identifier, []);
+    }
+
+    const userRequests = this.requests.get(identifier);
+
+    // Remove old requests outside the window
+    const validRequests = userRequests.filter(time => time > windowStart);
+    this.requests.set(identifier, validRequests);
+
+    if (validRequests.length >= this.maxRequests) {
+      return false;
+    }
+
+    // Add current request
+    validRequests.push(now);
+    return true;
+  }
+
+  /**
+   * Get the number of remaining requests for the identifier
+   * @param {string} identifier - Unique identifier
+   * @returns {number} Number of remaining requests
+   */
+  getRemainingRequests(identifier) {
+    const now = Date.now();
+    const windowStart = now - this.windowMs;
+
+    if (!this.requests.has(identifier)) {
+      return this.maxRequests;
+    }
+
+    const userRequests = this.requests.get(identifier);
+    const validRequests = userRequests.filter(time => time > windowStart);
+
+    return Math.max(0, this.maxRequests - validRequests.length);
+  }
+}
+
 // =============================================================================
 // APPLICATION ENTRY POINT
 // =============================================================================
@@ -383,4 +497,13 @@ process.on('SIGTERM', gracefulShutdown);
 // EXPORTS
 // =============================================================================
 
-module.exports = { app, greet };
+module.exports = {
+  app,
+  greet,
+  getAppInfo,
+  loadConfiguration,
+  isSensitiveValue,
+  initialize,
+  sanitizeInput,
+  RateLimiter,
+};

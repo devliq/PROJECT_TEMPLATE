@@ -7,21 +7,26 @@ const mockFs = {
 
 const mockPath = {
   resolve: jest.fn(),
+  join: jest.fn(),
 };
 
 const mockDotenv = {
   config: jest.fn(),
 };
 
-const mockExpress = jest.fn(() => ({
-  use: jest.fn(),
-  get: jest.fn(),
-  listen: jest.fn((port, callback) => {
-    if (callback) callback();
-    return { on: jest.fn() };
-  }),
-  static: jest.fn(),
-}));
+const mockExpress = Object.assign(
+  jest.fn(() => ({
+    use: jest.fn(),
+    get: jest.fn(),
+    listen: jest.fn((port, callback) => {
+      if (callback) callback();
+      return { on: jest.fn() };
+    }),
+  })),
+  {
+    static: jest.fn(),
+  }
+);
 
 jest.mock('fs', () => mockFs);
 jest.mock('path', () => mockPath);
