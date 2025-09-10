@@ -31,6 +31,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Validate secrets
+        run: |
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "❌ VERCEL_TOKEN is not set"
+            exit 1
+          fi
+          echo "✅ Required secrets are set"
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -43,6 +51,37 @@ jobs:
       - name: Install Vercel CLI
         run: npm install -g vercel
 
+      - name: Validate Vercel authentication
+        run: |
+          if ! vercel whoami --token $VERCEL_TOKEN > /dev/null 2>&1; then
+            echo "❌ Vercel authentication failed"
+            exit 1
+          fi
+          echo "✅ Vercel authentication successful"
+
+      - name: Link Vercel project
+        run: |
+          LINK_CMD="vercel link --yes --token $VERCEL_TOKEN --project project-template"
+          if [ -n "$VERCEL_ORG_ID" ]; then
+            LINK_CMD="$LINK_CMD --org-id $VERCEL_ORG_ID"
+          fi
+          if [ -n "$VERCEL_PROJECT_ID" ]; then
+            LINK_CMD="$LINK_CMD --project-id $VERCEL_PROJECT_ID"
+          fi
+          eval $LINK_CMD
+          echo "✅ Project linked successfully"
+
+      - name: Get project ID
+        run: |
+          if [ -f .vercel/project.json ]; then
+            PROJECT_ID=$(jq -r '.projectId' .vercel/project.json)
+            echo "PROJECT_ID=$PROJECT_ID" >> $GITHUB_ENV
+            echo "✅ Project ID retrieved: $PROJECT_ID"
+          else
+            echo "❌ .vercel/project.json not found"
+            exit 1
+          fi
+
       - name: Pull Vercel environment information
         run: vercel pull --yes
         env:
@@ -52,7 +91,7 @@ jobs:
         run: ./scripts/set-vercel-env.sh
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_PROJECT_ID: ${{ env.PROJECT_ID }}
           ENVIRONMENT: ${{ github.event.inputs.environment || 'production' }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           API_KEY: ${{ secrets.API_KEY }}

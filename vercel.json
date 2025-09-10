@@ -1,4 +1,5 @@
 {
+  "name": "project-template",
   "version": 2,
   "builds": [
     {

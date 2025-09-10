@@ -21,24 +21,30 @@ set_env_var() {
     echo "Setting environment variable: $key"
 
     # Check if env var already exists
-    existing_env=$(curl -s -H "Authorization: Bearer $TOKEN" \
-        "$VERCEL_API_URL/v9/projects/$PROJECT_ID/env" | \
-        jq -r ".envs[] | select(.key == \"$key\") | .id")
+    existing_env=$(curl -s -f -H "Authorization: Bearer $TOKEN" \
+        "$VERCEL_API_URL/v9/projects/$PROJECT_ID/env" 2>/dev/null | \
+        jq -r ".envs[] | select(.key == \"$key\") | .id" 2>/dev/null || echo "")
 
     if [ -n "$existing_env" ]; then
         echo "Updating existing environment variable: $key"
-        curl -X PATCH \
+        if ! curl -f -X PATCH \
             -H "Authorization: Bearer $TOKEN" \
             -H "Content-Type: application/json" \
             -d "{\"value\": \"$value\", \"type\": \"$type\"}" \
-            "$VERCEL_API_URL/v9/projects/$PROJECT_ID/env/$existing_env"
+            "$VERCEL_API_URL/v9/projects/$PROJECT_ID/env/$existing_env" > /dev/null 2>&1; then
+            echo "❌ Failed to update environment variable: $key"
+            exit 1
+        fi
     else
         echo "Creating new environment variable: $key"
-        curl -X POST \
+        if ! curl -f -X POST \
             -H "Authorization: Bearer $TOKEN" \
             -H "Content-Type: application/json" \
             -d "{\"key\": \"$key\", \"value\": \"$value\", \"type\": \"$type\", \"target\": $target}" \
-            "$VERCEL_API_URL/v10/projects/$PROJECT_ID/env"
+            "$VERCEL_API_URL/v9/projects/$PROJECT_ID/env" > /dev/null 2>&1; then
+            echo "❌ Failed to create environment variable: $key"
+            exit 1
+        fi
     fi
 
     echo ""
@@ -94,8 +100,8 @@ echo "🚀 Setting up Vercel environment variables for $ENVIRONMENT environment"
 
 # Validate required variables
 if [ -z "$PROJECT_ID" ]; then
-    echo "❌ Error: VERCEL_PROJECT_ID is required"
-    exit 1
+    echo "⚠️ Warning: VERCEL_PROJECT_ID is not set, skipping environment variable setup"
+    exit 0
 fi
 
 if [ -z "$TOKEN" ]; then
