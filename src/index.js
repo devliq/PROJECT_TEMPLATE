@@ -179,11 +179,16 @@ async function loadConfiguration() {
   let dotenvConfig;
   try {
     dotenvConfig = require('dotenv').config({ path: envPath });
+    if (!dotenvConfig) {
+      throw new Error('Failed to load dotenv configuration');
+    }
     if (dotenvConfig.error) {
       throw dotenvConfig.error;
     }
   } catch (error) {
-    throw new Error(`Failed to load configuration: ${error.message}`);
+    throw new Error(
+      `Failed to load configuration: ${error.message || String(error)}`
+    );
   }
 
   try {
