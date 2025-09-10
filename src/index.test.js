@@ -337,6 +337,8 @@ describe('initialize', () => {
 
   test('should handle missing .env file during initialization', async () => {
     mockFs.promises.access.mockRejectedValue(new Error('File not found'));
+    // Clear env vars to use defaults
+    process.env = {};
 
     await initialize();
 
@@ -422,6 +424,8 @@ describe('Integration Tests', () => {
 
   test('should handle full flow with missing .env', async () => {
     mockFs.promises.access.mockRejectedValue(new Error('File not found'));
+    // Clear env vars to use defaults
+    process.env = {};
 
     await initialize();
 

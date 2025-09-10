@@ -329,9 +329,7 @@ describe('loadConfiguration TS', () => {
   test('should throw ConfigurationError for invalid configuration', async () => {
     mockFs.access.mockResolvedValue(undefined);
     mockPath.resolve.mockReturnValue('/path/to/.env');
-    mockDotenv.config.mockImplementation(() => {
-      throw new Error('Dotenv error');
-    });
+    mockDotenv.config.mockReturnValue({ error: new Error('Dotenv error') });
 
     await expect(loadConfiguration()).rejects.toThrow(ConfigurationError);
   });

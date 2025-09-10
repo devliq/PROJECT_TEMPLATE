@@ -191,8 +191,15 @@ async function loadConfiguration() {
       } else {
         logger.info('✅ .env file loaded successfully.');
       }
-    } catch {
-      logger.warn('.env file not found. Using default configuration.');
+    } catch (error) {
+      if (
+        error.message &&
+        error.message.includes('Failed to load configuration')
+      ) {
+        throw error;
+      } else {
+        logger.warn('.env file not found. Using default configuration.');
+      }
     }
   }
 

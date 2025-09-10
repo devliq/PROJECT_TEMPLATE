@@ -248,8 +248,12 @@ async function loadConfiguration(): Promise<AppConfig> {
         } else {
           console.log('✅ .env file loaded successfully.');
         }
-      } catch {
-        console.warn('⚠️ .env file not found. Using default configuration.');
+      } catch (error) {
+        if (error instanceof ConfigurationError) {
+          throw error;
+        } else {
+          console.warn('⚠️ .env file not found. Using default configuration.');
+        }
       }
     }
 
