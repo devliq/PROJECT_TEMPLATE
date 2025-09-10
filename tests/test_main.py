@@ -83,9 +83,7 @@ class TestConfiguration(unittest.TestCase):
             self.assertFalse(config.debug)
 
     @patch("main.Path.exists", return_value=True)
-    @patch(
-        "dotenv.load_dotenv", side_effect=ImportError("No module named 'dotenv'")
-    )
+    @patch("dotenv.load_dotenv", side_effect=ImportError("No module named 'dotenv'"))
     @patch.dict(
         os.environ,
         {
