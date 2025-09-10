@@ -25,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Enhanced project organization with improved folder structure
+- Updated ts-jest dependency for improved testing capabilities
+- Updated TypeScript dependency for better type checking and performance
 
 ### Fixed
 

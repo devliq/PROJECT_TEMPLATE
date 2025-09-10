@@ -676,6 +676,8 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
+      issues: write
+      security-events: read
 
     steps:
       - name: Checkout code

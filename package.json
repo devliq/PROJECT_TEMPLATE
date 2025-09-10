@@ -1,6 +1,6 @@
 {
   "name": "project-template",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A comprehensive project template with modern tooling",
   "main": "src/index.ts",
   "scripts": {
@@ -71,9 +71,9 @@
     "nodemon": "^3.1.0",
     "prettier": "3.6.2",
     "supertest": "^7.1.4",
-    "ts-jest": "^29.1.0",
+    "ts-jest": "^29.4.1",
     "ts-node": "^10.9.2",
-    "typescript": "^5.4.2"
+    "typescript": "^5.9.2"
   },
   "overrides": {
     "glob": "^10.4.5"

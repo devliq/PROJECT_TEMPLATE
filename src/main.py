@@ -204,17 +204,21 @@ def load_configuration() -> AppConfig:
     """
     try:
         # Check if running in CI environment
-        is_ci = os.getenv('NODE_ENV') == 'production' or os.getenv('CI') == 'true'
+        is_ci = os.getenv("NODE_ENV") == "production" or os.getenv("CI") == "true"
 
         if is_ci:
-            logging.info("🔧 Running in CI environment. Using environment variables directly.")
+            logging.info(
+                "🔧 Running in CI environment. Using environment variables directly."
+            )
         else:
             # Resolve the .env file path relative to the current working directory
             env_path = Path(os.getcwd()) / ".env"
 
             # Check if .env file exists and load it
             if not env_path.exists():
-                logging.warning(f"⚠️  .env file not found at {env_path}. Using environment variables.")
+                logging.warning(
+                    f"⚠️  .env file not found at {env_path}. Using environment variables."
+                )
             else:
                 logging.info(f"📄 Loading configuration from: {env_path}")
 
@@ -223,7 +227,9 @@ def load_configuration() -> AppConfig:
                     load_dotenv(env_path)
                     logging.info("✅ .env file loaded successfully.")
                 except ImportError:
-                    logging.warning("dotenv not available. Using default configuration.")
+                    logging.warning(
+                        "dotenv not available. Using default configuration."
+                    )
                     return get_default_config()
                 except Exception as error:
                     logging.warning(f"⚠️  Failed to load .env file: {error}")

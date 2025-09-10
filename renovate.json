@@ -9,7 +9,6 @@
     "group:recommended",
     "workarounds:all"
   ],
-  "autodiscover": true,
   "schedule": ["before 4am on Monday"],
   "timezone": "America/New_York",
   "labels": ["dependencies"],
