@@ -219,7 +219,10 @@ describe('loadConfiguration', () => {
   test('should throw error when dotenv fails', async () => {
     mockFs.promises.access.mockResolvedValue();
     mockPath.resolve.mockReturnValue('/path/to/.env');
-    mockDotenv.config.mockReturnValue({ error: new Error('Dotenv error') });
+    mockDotenv.config.mockReturnValue({
+      parsed: undefined,
+      error: new Error('Dotenv error'),
+    });
 
     await expect(loadConfiguration()).rejects.toThrow(
       'Failed to load configuration: Dotenv error'
@@ -363,6 +366,7 @@ describe('initialize', () => {
     mockFs.promises.access.mockResolvedValue();
     mockPath.resolve.mockReturnValue('/path/to/.env');
     mockDotenv.config.mockReturnValue({
+      parsed: undefined,
       error: new Error('Dotenv config error'),
     });
 
@@ -370,8 +374,7 @@ describe('initialize', () => {
 
     expect(mockProcessExit).toHaveBeenCalledWith(1);
     expect(mockConsole.error).toHaveBeenCalledWith(
-      '❌ ❌ Application initialization failed:',
-      expect.any(String)
+      '❌ Configuration Error: Failed to load configuration: Dotenv config error'
     );
   });
 
@@ -451,14 +454,14 @@ describe('Integration Tests', () => {
     mockFs.promises.access.mockResolvedValue();
     mockPath.resolve.mockReturnValue('/path/to/.env');
     mockDotenv.config.mockReturnValue({
+      parsed: undefined,
       error: new Error('Dotenv config error'),
     });
 
     await initialize();
 
     expect(mockConsole.error).toHaveBeenCalledWith(
-      '❌ ❌ Application initialization failed:',
-      expect.any(String)
+      '❌ Configuration Error: Failed to load configuration: Dotenv config error'
     );
 
     expect(mockProcessExit).toHaveBeenCalledWith(1);
