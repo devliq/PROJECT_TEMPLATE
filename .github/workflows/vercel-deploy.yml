@@ -83,7 +83,7 @@ jobs:
           fi
 
       - name: Pull Vercel environment information
-        run: vercel pull --yes
+        run: vercel pull --yes --token $VERCEL_TOKEN
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
