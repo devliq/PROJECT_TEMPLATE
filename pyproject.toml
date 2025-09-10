@@ -11,7 +11,8 @@ authors = [
 ]
 dependencies = [
     "typer",
-    "python-dotenv"
+    "python-dotenv",
+    "pytest-asyncio"
 ]
 
 [tool.setuptools]

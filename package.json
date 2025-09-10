@@ -100,17 +100,11 @@
       "src/**/*.ts",
       "!src/**/*.test.js",
       "!src/**/*.test.ts",
-      "!src/**/*.d.ts",
-      "!src/index.js",
-      "!src/index.ts"
+      "!src/**/*.d.ts"
     ],
-    "coveragePathIgnorePatterns": [
-      "src/index.js",
-      "src/index.ts"
-    ],
-    "transformIgnorePatterns": [
-      "src/index\\.js$"
-    ],
+    "coveragePathIgnorePatterns": [],
+    "coverageProvider": "v8",
+    "transformIgnorePatterns": [],
     "testMatch": [
       "**/__tests__/**/*.js",
       "**/__tests__/**/*.ts",

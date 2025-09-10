@@ -237,11 +237,11 @@ def load_configuration() -> AppConfig:
                     logging.info("🔄 Falling back to environment variables.")
 
         config = AppConfig(
-            app_name=os.getenv("APP_NAME", "Project Template"),
-            app_version=os.getenv("APP_VERSION", "1.0.0"),
-            environment=os.getenv("APP_ENV", "development"),
-            debug=os.getenv("DEBUG", "false").lower() == "true",
-            log_level=os.getenv("LOG_LEVEL", "INFO"),
+            app_name=os.getenv("APP_NAME") or "Project Template",
+            app_version=os.getenv("APP_VERSION") or "1.0.0",
+            environment=os.getenv("APP_ENV") or "development",
+            debug=(os.getenv("DEBUG") or "false").lower() == "true",
+            log_level=os.getenv("LOG_LEVEL") or "INFO",
         )
 
         # Validate configuration

@@ -144,6 +144,72 @@ Based on the analysis of the current GitHub Actions workflow, several areas for 
 | GitOps                 | High   | High   | Medium   |
 | Analytics              | Low    | Medium | Low      |
 
+## Codecov Integration Configuration
+
+### Issue Resolution: Codecov Token Requirements
+
+**Problem**: Codecov has updated their security policies and now requires authentication tokens for all coverage uploads, including public repositories. The CI pipeline was failing with "Token required - not valid tokenless upload".
+
+**Solution Implemented**:
+
+- Updated codecov action from `@main` to `@v4` for stability
+- Added `CODECOV_TOKEN` secret configuration to both Node.js and Python coverage upload steps
+- Maintained `fail_ci_if_error: false` for graceful handling of upload failures
+
+### Configuration Changes
+
+```yaml
+# Node.js Coverage Upload
+- name: Upload Jest coverage
+  uses: codecov/codecov-action@v4
+  with:
+    file: ./coverage/lcov.info
+    flags: nodejs
+    token: ${{ secrets.CODECOV_TOKEN }}
+    fail_ci_if_error: false
+
+# Python Coverage Upload
+- name: Upload Python coverage
+  uses: codecov/codecov-action@v4
+  with:
+    file: ./tests/coverage.xml
+    flags: python
+    token: ${{ secrets.CODECOV_TOKEN }}
+    fail_ci_if_error: false
+```
+
+### Token Setup Instructions
+
+1. **Visit Codecov Dashboard**:
+   - Go to [codecov.io](https://codecov.io) and sign in with your GitHub account
+   - Navigate to your repository: `devliq/PROJECT_TEMPLATE`
+
+2. **Generate Repository Token**:
+   - Go to Settings → Repository Settings
+   - Find the "Repository Upload Token" section
+   - Copy the token (it will look like: `abcdef12-3456-7890-abcd-ef1234567890`)
+
+3. **Add Token to GitHub Secrets**:
+   - Go to your GitHub repository
+   - Navigate to Settings → Secrets and variables → Actions
+   - Click "New repository secret"
+   - Name: `CODECOV_TOKEN`
+   - Value: Paste the token from Codecov
+   - Click "Add secret"
+
+4. **Verify Configuration**:
+   - Push a commit to trigger the CI pipeline
+   - Check the Actions tab to ensure coverage uploads succeed
+   - Verify coverage reports appear in your Codecov dashboard
+
+### Benefits of This Configuration
+
+- **Security**: Uses authenticated uploads to prevent abuse
+- **Reliability**: Pinned action version prevents unexpected failures
+- **Graceful Degradation**: Pipeline continues even if coverage upload fails
+- **Multi-language Support**: Separate flags for Node.js and Python coverage
+- **Future-proof**: Compatible with both public and private repositories
+
 ## Next Steps
 
 1. Review and approve the proposed improvements
