@@ -26,7 +26,6 @@ try:
     import typer
 except ImportError:
     typer = None
-from dotenv import load_dotenv
 
 
 def sanitize_input(
@@ -225,6 +224,7 @@ def load_configuration() -> AppConfig:
 
                 # Load environment variables with error handling for dotenv
                 try:
+                    from dotenv import load_dotenv
                     load_dotenv(env_path)
                     logging.info("✅ .env file loaded successfully.")
                 except ImportError:

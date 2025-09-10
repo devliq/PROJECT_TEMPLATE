@@ -60,7 +60,7 @@ class TestConfiguration(unittest.TestCase):
         },
     )
     @patch("main.Path.exists", return_value=True)
-    @patch("main.load_dotenv")
+    @patch("dotenv.load_dotenv")
     def test_load_configuration_with_env(self, mock_load_dotenv, mock_exists):
         """Test loading configuration with environment variables."""
         _ = mock_load_dotenv
@@ -83,8 +83,8 @@ class TestConfiguration(unittest.TestCase):
             self.assertFalse(config.debug)
 
     @patch("main.Path.exists", return_value=True)
-    @patch.object(
-        main, "load_dotenv", side_effect=ImportError("No module named 'dotenv'")
+    @patch(
+        "dotenv.load_dotenv", side_effect=ImportError("No module named 'dotenv'")
     )
     @patch.dict(
         os.environ,
@@ -430,7 +430,7 @@ class TestIntegration(unittest.TestCase):
         },
     )
     @patch("main.Path.exists", return_value=True)
-    @patch("main.load_dotenv")
+    @patch("dotenv.load_dotenv")
     @patch("main.logging.getLogger")
     @patch("main.sys.exit")
     def test_full_application_flow_with_typer(
@@ -449,7 +449,7 @@ class TestIntegration(unittest.TestCase):
             mock_app.assert_called_once()
 
     @patch("main.Path.exists", return_value=True)
-    @patch("main.load_dotenv")
+    @patch("dotenv.load_dotenv")
     @patch("main.sys.exit")
     def test_full_application_flow_with_argparse(
         self, mock_main_path_exists, mock_main_load_dotenv, mock_sys_exit
@@ -488,7 +488,7 @@ class TestIntegration(unittest.TestCase):
 
     @patch.dict(os.environ, {"APP_NAME": "", "APP_VERSION": "1.0.0", "APP_ENV": "test"})
     @patch("main.Path.exists", return_value=True)
-    @patch("main.load_dotenv")
+    @patch("dotenv.load_dotenv")
     @patch("main.logging.getLogger")
     @patch("main.sys.exit")
     def test_application_handles_configuration_errors(
@@ -532,7 +532,7 @@ class TestIntegration(unittest.TestCase):
                     )
 
     @patch("main.Path.exists", return_value=True)
-    @patch("main.load_dotenv")
+    @patch("dotenv.load_dotenv")
     @patch("main.sys.exit")
     def test_application_handles_keyboard_interrupt(
         self, mock_sys_exit, mock_load_dotenv, mock_path_exists
